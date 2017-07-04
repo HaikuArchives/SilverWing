@@ -1,0 +1,30 @@
+AboutWindow library
+-------------------------------------------------------------------------------------------
+@What's is it?
+This class provides about window for BeOS applications.
+ 
+@What does it need?
+Only needs to use this class, Your application need to have application resource.
+because this class read application version and icon from application resource.
+
+@How to use it?
+Give it to use this class as follows. 
+
+void
+HApp::AboutRequested()
+{
+	HAboutWindow *win = new HAboutWindow(
+				"app name",
+				__DATE__,
+				"comment",
+				"your home page url",
+				"your mail address");
+	win->Show();
+} 
+
+And I included example programs in this archive. Look at the example.
+
+---------------------------------------------------------------------------------------------
+©2000 by Atsushi Takamatsu 
+	E-Mail: atsushi@io.ocn.ne.jp
+URLView is made by Billy Kakes. <http://www.bebits.com/app/1586>
