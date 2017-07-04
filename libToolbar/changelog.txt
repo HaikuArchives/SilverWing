@@ -1,0 +1,19 @@
+Changelog
+-----------------------------------------------------------------------
+@version 1.2.0
+	*With Label mode was added.
+@version 1.1.4
+	*Button style was modified.
+	*Fixed memory leaks
+@version 1.1.3
+	*Replaced Draw(Bounds()) with Invalidate(). 
+@version 1.1.2
+	*Fixed minor bugs. 
+@version 1.1.1
+	*Enabled tooltips when the buttons was disabled. 
+@version 1.1.0
+	* Add delay time to show tooltips window. 
+@version 1.0.0
+	* Initial release.
+
+
