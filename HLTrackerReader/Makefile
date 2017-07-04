@@ -6,6 +6,7 @@
 
 # The name of the binary.
 NAME = HLTrackerReader
+TARGET_DIR = ../dist
 
 # The type of binary, must be one of:
 #	APP:	Application

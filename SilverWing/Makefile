@@ -6,6 +6,7 @@
 
 # The name of the binary.
 NAME = SilverWing
+TARGET_DIR = ../dist
 
 # The type of binary, must be one of:
 #	APP:	Application
@@ -104,7 +105,7 @@ RSRCS = ./resources/Resource.rsrc ./resources/Icon.rsrc
 #	- 	if your library does not follow the standard library naming scheme,
 #		you need to specify the path to the library and it's name.
 #		(e.g. for mylib.a, specify "mylib.a" or "path/mylib.a")
-LIBS = be tracker textencoding translation netapi network media santa Toolbar \
+LIBS = be tracker textencoding translation netapi network media santa Toolbar $(STDCPPLIBS) \
 	Utils HLdat
 
 #	Specify additional paths to directories following the standard libXXX.so
@@ -129,7 +130,7 @@ LOCAL_INCLUDE_PATHS = ../HLTrackerReader/libs/Utils/ ../libUtils \
 
 #	Specify the level of optimization that you want. Specify either NONE (O0),
 #	SOME (O1), FULL (O2), or leave blank (for the default optimization level).
-OPTIMIZE :=
+OPTIMIZE := SOME
 
 # 	Specify the codes for languages you are going to support in this
 # 	application. The default "en" one must be provided too. "make catkeys"
@@ -158,7 +159,7 @@ SYMBOLS :=
 DEBUGGER :=
 
 #	Specify any additional compiler flags to be used.
-COMPILER_FLAGS =
+COMPILER_FLAGS = -frtti
 
 #	Specify any additional linker flags to be used.
 LINKER_FLAGS =

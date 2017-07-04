@@ -1,3 +1,6 @@
 objects*/
 libToolbar/libToolbar.a
 libUtils/libUtils.a
+dist-server/SilverWing-Server
+dist/SilverWing
+dist/HLTrackerReader

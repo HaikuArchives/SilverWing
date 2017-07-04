@@ -6,6 +6,7 @@
 
 # The name of the binary.
 NAME = SilverWing-Server
+TARGET_DIR = ../dist-server
 
 # The type of binary, must be one of:
 #	APP:	Application
