@@ -4,6 +4,7 @@
 #include "LThread.h"
 #include <String.h>
 #include <NetworkKit.h>
+#include <ListItem.h>
 #include <iostream>
 
 enum{

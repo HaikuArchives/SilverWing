@@ -8,6 +8,7 @@
 
 # specify the name of the binary
 NAME=libToolbar
+TARGET_DIR = .
 
 # specify the type of binary
 #	APP:	Application
@@ -16,15 +17,15 @@ NAME=libToolbar
 #	DRIVER: Kernel Driver
 TYPE=STATIC
 
-# 	if you plan to use localization features 
+# 	if you plan to use localization features
 # 	specify the application MIME siganture
-APP_MIME_SIG= 
+APP_MIME_SIG=
 
 #	add support for new Pe and Eddie features
 #	to fill in generic makefile
 
 #%{
-# @src->@ 
+# @src->@
 
 #	specify the source files to use
 #	full paths or paths relative to the makefile can be included
@@ -44,13 +45,13 @@ SRCS=HToolTipsView.cpp \
 #	specify the resource definition files to use
 #	full path or a relative path to the resource file can be used.
 RDEFS=
-	
-#	specify the resource files to use. 
+
+#	specify the resource files to use.
 #	full path or a relative path to the resource file can be used.
 #	both RDEFS and RSRCS can be defined in the same makefile.
 RSRCS=
 
-# @<-src@ 
+# @<-src@
 #%}
 
 #	end support for Pe and Eddie
@@ -66,12 +67,12 @@ RSRCS=
 #
 #	-	for localization support add following libs:
 #		locale localestub
-#		
+#
 #	- 	if your library does not follow the standard library
 #		naming scheme you need to specify the path to the library
 #		and it's name
 #		library: my_lib.a entry: my_lib.a or path/my_lib.a
-LIBS= 
+LIBS=
 
 #	specify additional paths to directories following the standard
 #	libXXX.so or libXXX.a naming scheme.  You can specify full paths
@@ -79,21 +80,21 @@ LIBS=
 #	be recursive, so include all of the paths where libraries can
 #	be found.  Directories where source files are found are
 #	automatically included.
-LIBPATHS= 
+LIBPATHS=
 
 #	additional paths to look for system headers
 #	thes use the form: #include <header>
 #	source file directories are NOT auto-included here
-SYSTEM_INCLUDE_PATHS = 
+SYSTEM_INCLUDE_PATHS =
 
 #	additional paths to look for local headers
 #	thes use the form: #include "header"
 #	source file directories are automatically included
-LOCAL_INCLUDE_PATHS = 
+LOCAL_INCLUDE_PATHS =
 
 #	specify the level of optimization that you desire
 #	NONE, SOME, FULL
-OPTIMIZE= 
+OPTIMIZE=
 
 # 	specify here the codes for languages you are going
 # 	to support in this application. The default "en"
@@ -133,9 +134,9 @@ COMPILER_FLAGS=
 LINKER_FLAGS=
 
 #	specify the version of this particular item
-#	(for example, -app 3 4 0 d 0 -short 340 -long "340 "`echo -n -e '\302\251'`"1999 GNU GPL") 
+#	(for example, -app 3 4 0 d 0 -short 340 -long "340 "`echo -n -e '\302\251'`"1999 GNU GPL")
 #	This may also be specified in a resource.
-APP_VERSION= 
+APP_VERSION=
 
 #	(for TYPE == DRIVER only) Specify desired location of driver in the /dev
 #	hierarchy. Used by the driverinstall rule. E.g., DRIVER_PATH = video/usb will

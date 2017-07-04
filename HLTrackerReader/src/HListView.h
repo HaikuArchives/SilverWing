@@ -1,7 +1,7 @@
 #ifndef __HLISTVIEW_H__
 #define __HLISTVIEW_H__
 
-#include "ColumnListView.h"
+#include <santa/ColumnListView.h>
 #include "LockingList.h"
 #include <String.h>
 
@@ -32,9 +32,9 @@ public:
 			void	StartWatching(bool start);
 			void	EmptyQueue();
 			void	AddQueue(HTrackerItem *item);
-protected:	
+protected:
 	virtual bool	InitiateDrag (BPoint point, int32 index, bool wasSelected);
-	virtual void	MouseDown(BPoint pos);	
+	virtual void	MouseDown(BPoint pos);
 
 private:
 	static int32	Watcher(void *data);

@@ -1,6 +1,6 @@
 /*  URLView 2.0
 	written by William Kakes of Tall Hill Software.
-	
+
 	This class provides an underlined and clickable BStringView
 	that will launch the web browser, e-mail program, or FTP client
 	when clicked on.  Other features include hover-highlighting,
@@ -10,7 +10,7 @@
 	and closed-source) free of charge, but a mention in your read me
 	file or your program's about box would be appreciated.  See
 	http://www.tallhill.com	for current contact information.
-	
+
 	URLView is provided as-is, with no warranties of any kind.  If
 	you use it, you are on your own.
 */
@@ -27,6 +27,7 @@
 #include <NodeInfo.h>
 #include <Path.h>
 #include <Roster.h>
+#include <Clipboard.h>
 
 #include <unistd.h>
 
@@ -35,10 +36,10 @@
 URLView::URLView( BRect frame, const char *name, const char *label,
 				  const char *url, uint32 resizingMode, uint32 flags )
 		: BStringView( frame, name, label, resizingMode, flags ) {
-	
+
 	// Set the instance variables.
 	this->url = new BString( url );
-	
+
 	// Set the default values for the other definable instance variables.
 	this->color = blue;
 	this->clickColor = red;
@@ -47,34 +48,34 @@ URLView::URLView( BRect frame, const char *name, const char *label,
 	this->draggable = true;
 	this->iconSize = 16;
 	this->underlineThickness = 1;
-	
+
 	// Create the cursor to use when over the link.
 	this->linkCursor = new BCursor( url_cursor );
-	
+
 	// The link is not currently selected.
 	selected = false;
-	
+
 	// The URL is currently not hover-colored.
 	hovering = false;
-	
+
 	// The user has not dragged out of the view.
 	draggedOut = false;
-	
+
 	// The user has not yet opened the popup menu.
 	inPopup = false;
-	
+
 	// Initialize the attributes list (there are 14 standard
 	// Person attributes).
 	attributes = new BList( 14 );
 }
-		
+
 
 URLView::~URLView() {
 	delete url;
 	delete linkCursor;
-	
+
 	// Delete all the attributes.
-	KeyPair *item; 
+	KeyPair *item;
 	for( int i = 0;  (item = (KeyPair *) attributes->ItemAt(i));  i++ ) {
 		delete item->key;
 		delete item->value;
@@ -115,7 +116,7 @@ void URLView::Draw( BRect updateRect ) {
 					 (float) (rect.bottom - descent - underlineThickness + 1),
 					 (float) StringWidth( Text() ),
 					 (float) rect.bottom - descent ) );
-				
+
 	// Note:  DrawString() draws the text at one pixel above the pen's
 	//		  current y coordinate.
 	MovePenTo( BPoint( rect.left, rect.bottom - descent -
@@ -138,13 +139,13 @@ void URLView::MessageReceived( BMessage *message ) {
 		fullName->Append( "/" );
 		fullName->Append( message->FindString( "name" ) );
 		BString *title = new BString( Text() );
-		
+
 		// Set the new file as a bookmark or as a person as appropriate.
 		if( IsEmailLink() ) {
 			CreatePerson( fullName, title );
 		}
 		else CreateBookmark( fullName, title );
-		
+
 		delete fullName;
 		delete title;
 	}
@@ -163,14 +164,14 @@ void URLView::MouseDown( BPoint point ) {
 	if( GetTextRect().Contains( point ) ) {
 		SetHighColor( clickColor );
 		Redraw();
-		
+
 		// Set the link as selected and track the mouse.
 		selected = true;
 		SetMouseEventMask( B_POINTER_EVENTS );
-		
+
 		// Remember where the user clicked.
 		dragOffset = point;
-		
+
 		// Pop up the context menu?
 		if( buttons == B_SECONDARY_MOUSE_BUTTON ) inPopup = true;
 	}
@@ -180,7 +181,7 @@ void URLView::MouseDown( BPoint point ) {
 
 void URLView::MouseMoved( BPoint point, uint32 transit,
 						  const BMessage *message ) {
-						  
+
 	// Make sure the window is the active one.
 	if( !Window()->IsActive() ) return;
 
@@ -195,7 +196,7 @@ void URLView::MouseMoved( BPoint point, uint32 transit,
 			// Should we set the cursor to the link cursor?
 			if( GetTextRect().Contains( point )  &&  !draggedOut ) {
 				if( !alreadyDragging ) be_app->SetCursor( linkCursor );
-				
+
 				// Did the user leave and re-enter the view while
 				// holding down the mouse button?  If so, highlight
 				// the link.
@@ -210,10 +211,10 @@ void URLView::MouseMoved( BPoint point, uint32 transit,
 						Redraw();
 						hovering = true;
 					}
-				}	
+				}
 			}
 			break;
-			
+
 		case( B_EXITED_VIEW ):
 			// We want to restore the link to it normal color and the
 			// mouse cursor to the normal hand.  However, we should only
@@ -222,7 +223,7 @@ void URLView::MouseMoved( BPoint point, uint32 transit,
 				be_app->SetCursor( B_HAND_CURSOR );
 				SetHighColor( color );
 				Redraw();
-				
+
 				// Is the user drag-and-dropping a bookmark or person?
 				if( draggable ) {
 					draggedOut = true;
@@ -249,7 +250,7 @@ void URLView::MouseMoved( BPoint point, uint32 transit,
 			// back into it here, so we must handle both cases.
 			// In the first case, the cursor is now over the link.
 			if( GetTextRect().Contains( point )  &&  !draggedOut ) {
-				// We only want to change the cursor if not dragging.						
+				// We only want to change the cursor if not dragging.
 				if( !alreadyDragging ) be_app->SetCursor( linkCursor );
 				if( selected ) {
 					if( draggable ) {
@@ -291,7 +292,7 @@ void URLView::MouseMoved( BPoint point, uint32 transit,
 				if( selected ) {
 					SetHighColor( color );
 					Redraw();
-					
+
 					// Is the user dragging the link?
 					if( draggable ) {
 						draggedOut = true;
@@ -318,10 +319,10 @@ void URLView::MouseUp( BPoint point ) {
 		BPopUpMenu *popup = CreatePopupMenu();
 			// Work around a current bug in Be's popup menus.
 			point.y = point.y - 6;
-			
+
 			// Display the popup menu.
 			BMenuItem *selected = popup->Go( ConvertToScreen( point ) , false, true );
-			
+
 			// Did the user select an item?
 			if( selected ) {
 				BString label( selected->Label() );
@@ -352,7 +353,7 @@ void URLView::MouseUp( BPoint point ) {
 	selected = false;
 	draggedOut = false;
 	inPopup = false;
-	
+
 	// Should we restore the hovering-highlighted color or the original
 	// link color?
 	if( GetTextRect().Contains( point )  &&  !draggedOut  &&
@@ -430,7 +431,7 @@ void URLView::CopyToClipboard() {
 	BMessage *clip = (BMessage *) NULL;
 	// Get the important URL (i.e. trim off "mailto:", etc.).
 	BString newclip = GetImportantURL();
-	
+
 	// Be sure to lock the clipboard first.
 	if( clipboard.Lock() ) {
 		clipboard.Clear();
@@ -466,7 +467,7 @@ void URLView::CreateBookmark( const BString *fullName, const BString *title ) {
 		fs_write_attr( fd, "META:url", B_STRING_TYPE, 0, url->String(), url->Length() + 1 );
 		WriteAttributes( fd );
 		close( fd );
-		fs_close_attr_dir( d ); 
+		fs_close_attr_dir( d );
 	}
 }
 
@@ -474,7 +475,7 @@ void URLView::CreateBookmark( const BString *fullName, const BString *title ) {
 void URLView::CreatePerson( const BString *fullName, const BString *title ) {
 	// Read the file defined by the path and the title.
 	BFile *file = new BFile( fullName->String(), B_WRITE_ONLY );
-		
+
 	// Set the file's MIME type to be a person.
 	BNodeInfo *nodeInfo = new BNodeInfo( file );
 	nodeInfo->SetType( "application/x-person" );
@@ -493,7 +494,7 @@ void URLView::CreatePerson( const BString *fullName, const BString *title ) {
 		fs_write_attr( fd, "META:email", B_STRING_TYPE, 0, email.String(), email.Length() + 1 );
 		WriteAttributes( fd );
 		close( fd );
-		fs_close_attr_dir( d ); 
+		fs_close_attr_dir( d );
 	}
 }
 
@@ -503,10 +504,10 @@ BPopUpMenu * URLView::CreatePopupMenu() {
 	// Create the right-click popup menu.
 	BPopUpMenu *returnMe = new BPopUpMenu( "URLView Popup", false, false );
 	returnMe->SetAsyncAutoDestruct( true );
-	
+
 	entry_ref app;
 
-	// Set the text of the first item according to the link type.	
+	// Set the text of the first item according to the link type.
 	if( IsEmailLink() ) {
 		// Find the name of the default e-mail client.
 		if( be_roster->FindApp( "text/x-email", &app ) == B_OK ) {
@@ -541,7 +542,7 @@ BPopUpMenu * URLView::CreatePopupMenu() {
 		}
 	}
 	returnMe->AddItem( new BMenuItem( "Copy this link to the clipboard", NULL ) );
-	
+
 	return returnMe;
 }
 
@@ -550,7 +551,7 @@ BPopUpMenu * URLView::CreatePopupMenu() {
 void URLView::DoBookmarkDrag() {
 	// Handle all of the bookmark dragging.  This includes setting up
 	// the drag message and drawing the dragged bitmap.
-	
+
 	// Set up the drag message to support both BTextView dragging (using
 	// the URL) and file dropping (to Tracker).
 	BMessage *dragMessage = new BMessage( B_MIME_DATA );
@@ -560,19 +561,19 @@ void URLView::DoBookmarkDrag() {
 	dragMessage->AddString( "be:type_descriptions", "bookmark" );
 	dragMessage->AddString( "be:clip_name", Text() );
 	dragMessage->AddString( "be:url", url->String() );
-	
+
 	// This allows the user to drag the URL into a standard BTextView.
 	BString link = GetImportantURL();
 	dragMessage->AddData( "text/plain", B_MIME_DATA, link.String(),
 						  link.Length() + 1 );
-			
+
 	// Query for the system's icon for bookmarks.
 	BBitmap *bookmarkIcon = new BBitmap( BRect( 0, 0, iconSize - 1,
 												iconSize - 1 ), B_CMAP8 );
 	BMimeType mime( "application/x-vnd.Be-bookmark" );
 	if( iconSize == 16 ) mime.GetIcon( bookmarkIcon, B_MINI_ICON );
 	else mime.GetIcon( bookmarkIcon, B_LARGE_ICON );
-	
+
 	// Find the size of the bitmap to drag.  If the text is bigger than the
 	// icon, use that size.  Otherwise, use the icon's.  Center the icon
 	// vertically in the bitmap.
@@ -584,19 +585,19 @@ void URLView::DoBookmarkDrag() {
 		rect.top -= adjustment;
 		rect.bottom += adjustment;
 	}
-	
+
 	// Make sure the rectangle starts at 0,0.
 	rect.bottom += 0 - rect.top;
 	rect.top = 0;
-	
+
 	// Create the bitmap to draw the dragged image in.
 	BBitmap *dragBitmap = new BBitmap( rect, B_RGBA32, true );
 	BView *dragView = new BView( rect, "Drag View", 0, 0 );
 	dragBitmap->Lock();
 	dragBitmap->AddChild( dragView );
-	
+
 	BRect frameRect = dragView->Frame();
-	
+
 	// Make the background of the dragged image transparent.
 	dragView->SetHighColor( B_TRANSPARENT_COLOR );
 	dragView->FillRect( frameRect );
@@ -636,18 +637,18 @@ void URLView::DoBookmarkDrag() {
 						(float) (textCenter + 1),
 						(float) StringWidth( url->String() ) + iconSize + 4,
 						(float) textCenter + underlineThickness ) );
-	
+
 	// Be sure to flush the view buffer so everything is drawn.
 	dragView->Flush();
 	dragBitmap->Unlock();
-	
+
 	// The URL's label is probably not the same size as the URL's
 	// address, which is what we're going to draw.  So horizontally
 	// offset the bitmap proportionally to where the user clicked
 	// on the link.
 	float horiz = dragOffset.x / GetTextRect().Width();
 	dragOffset.x = horiz * frameRect.right;
-	
+
 	DragMessage( dragMessage, dragBitmap, B_OP_ALPHA,
 				 BPoint( dragOffset.x, (rect.Height() / 2) + 2 ), this );
 	delete dragMessage;
@@ -659,7 +660,7 @@ void URLView::DoBookmarkDrag() {
 void URLView::DoPersonDrag() {
 	// Handle all of the bookmark dragging.  This includes setting up
 	// the drag message and drawing the dragged bitmap.
-	
+
 	// Set up the drag message to support both BTextView dragging (using
 	// the e-mail address) and file dropping (to Tracker).
 	BMessage *dragMessage = new BMessage( B_MIME_DATA );
@@ -668,20 +669,20 @@ void URLView::DoPersonDrag() {
 	dragMessage->AddString( "be:filetypes", "application/x-person" );
 	dragMessage->AddString( "be:type_descriptions", "person" );
 	dragMessage->AddString( "be:clip_name", Text() );
-	
+
 	// This allows the user to drag the e-mail address into a
 	// standard BTextView.
 	BString email = GetImportantURL();
 	dragMessage->AddData( "text/plain", B_MIME_DATA, email.String(),
 						  email.Length() + 1 );
-	
+
 	// Query for the system's icon for bookmarks.
 	BBitmap *personIcon = new BBitmap( BRect( 0, 0, iconSize - 1,
 									   iconSize - 1 ), B_CMAP8 );
 	BMimeType mime( "application/x-person" );
 	if( iconSize == 16 ) mime.GetIcon( personIcon, B_MINI_ICON );
 	else mime.GetIcon( personIcon, B_LARGE_ICON );
-	
+
 	// Find the size of the bitmap to drag.  If the text is bigger than the
 	// icon, use that size.  Otherwise, use the icon's.  Center the icon
 	// vertically in the bitmap.
@@ -692,19 +693,19 @@ void URLView::DoPersonDrag() {
 		rect.top -= adjustment;
 		rect.bottom += adjustment;
 	}
-	
+
 	// Make sure the rectangle starts at 0,0.
 	rect.bottom += 0 - rect.top;
 	rect.top = 0;
-	
+
 	// Create the bitmap to draw the dragged image in.
 	BBitmap *dragBitmap = new BBitmap( rect, B_RGBA32, true );
 	BView *dragView = new BView( rect, "Drag View", 0, 0 );
 	dragBitmap->Lock();
 	dragBitmap->AddChild( dragView );
-	
+
 	BRect frameRect = dragView->Frame();
-	
+
 	// Make the background of the dragged image transparent.
 	dragView->SetHighColor( B_TRANSPARENT_COLOR );
 	dragView->FillRect( frameRect );
@@ -738,11 +739,11 @@ void URLView::DoPersonDrag() {
 	dragView->SetFont( &font );
 	dragView->MovePenTo( BPoint( frameRect.left + iconSize + 4, textCenter ) );
 	dragView->DrawString( Text() );
-	
+
 	// Be sure to flush the view buffer so everything is drawn.
 	dragView->Flush();
 	dragBitmap->Unlock();
-	
+
 	// The Person icon adds some width to the bitmap that we are
 	// going to draw.  So horizontally offset the bitmap proportionally
 	// to where the user clicked on the link.
@@ -763,10 +764,10 @@ BString URLView::GetImportantURL() {
 	// Return the relevant portion of the URL (i.e. strip off "mailto:" from
 	// e-mail address URLs).
 	BString returnMe;
-	
+
 	if( IsEmailLink() ) url->CopyInto( returnMe, 7, url->CountChars() - 6 );
 	else url->CopyInto( returnMe, 0, url->CountChars() );
-	
+
 	return returnMe;
 }
 
@@ -783,9 +784,9 @@ BRect URLView::GetTextRect() {
 	// Get the height of the current font.
 	font_height height;
 	GetFontHeight( &height );
-	
+
 	float stringHeight = underlineThickness + height.ascent - 1;
-	
+
 	// Get the rectangle of just the string.
 	return BRect( frame.left, frame.bottom - stringHeight,
 				  frame.left + StringWidth( Text() ), frame.bottom - 1 );
@@ -803,9 +804,9 @@ BRect URLView::GetURLRect() {
 	// Get the height of the current font.
 	font_height height;
 	GetFontHeight( &height );
-	
+
 	float stringHeight = underlineThickness + height.ascent - 1;
-	
+
 	// Get the rectangle of just the string.
 	return BRect( frame.left, frame.bottom - stringHeight,
 				  frame.left + StringWidth( url->String() ),
@@ -874,7 +875,7 @@ void URLView::LaunchURL() {
 			alert->Go();
 		}
 	}
-	
+
 	// We don't know how to handle anything else.
 }
 
@@ -890,8 +891,8 @@ void URLView::Redraw() {
 
 void URLView::WriteAttributes( int fd ) {
 	// Write the developer-defined attributes to the newly-created file.
-	KeyPair *item; 
+	KeyPair *item;
 	for( int i = 0;  (item = (KeyPair *) attributes->ItemAt(i));  i++ ) {
 		fs_write_attr( fd, item->key->String(), B_STRING_TYPE, 0, item->value->String(), item->value->Length() + 1 );
-	}	
+	}
 }

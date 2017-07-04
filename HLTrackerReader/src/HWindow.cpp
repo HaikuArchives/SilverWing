@@ -1,5 +1,5 @@
 #include "HWindow.h"
-#include "BetterScrollView.h"
+#include <santa/BetterScrollView.h>
 #include "RectUtils.h"
 #include "HToolbar.h"
 #include "HListView.h"
@@ -26,7 +26,7 @@
 /***********************************************************
  * Constructor.
  ***********************************************************/
-HWindow::HWindow(BRect rect,const char* name)	
+HWindow::HWindow(BRect rect,const char* name)
 			:BWindow(rect,name,B_DOCUMENT_WINDOW,B_ASYNCHRONOUS_CONTROLS)
 {
 	SetPulseRate(1.5*1000000);
@@ -39,7 +39,7 @@ HWindow::HWindow(BRect rect,const char* name)
 	fSearchIndex = 0;
 	fAlive = false;
 	AddShortcut('/',0,new BMessage(B_ZOOM));
-	
+
 	float min_width,min_height,max_width,max_height;
 	GetSizeLimits(&min_width,&max_width,&min_height,&max_height);
 	min_width = 200;
@@ -51,7 +51,7 @@ HWindow::HWindow(BRect rect,const char* name)
  * Destructor.
  ***********************************************************/
 HWindow::~HWindow()
-{	
+{
 	HListView *listview = cast_as(FindView("listview"),HListView);
 	listview->SetInvocationMessage(NULL);
 }
@@ -132,12 +132,12 @@ HWindow::InitMenu()
 	frame.bottom = frame.top + 10;
 	frame.OffsetTo(B_ORIGIN);
 	BMenuBar *menuBar = new BMenuBar(frame,"MENUBAR");
-	BMenu* aMenu; 
+	BMenu* aMenu;
     MenuUtils utils;
     BResources *rsrc = BApplication::AppResources();
     ResourceUtils rutils(rsrc);
-	//------------------------ File Menu  
-    aMenu = new BMenu(_("File"));         
+	//------------------------ File Menu
+    aMenu = new BMenu(_("File"));
     	utils.AddMenuItem(aMenu,_("Add New Tracker…"),M_ADD_NEW_TRACKER,this,this,'A',0,
     			rutils.GetBitmapResource('BBMP',"BMP:ADDTRACKER"));
     	aMenu->AddSeparatorItem();
@@ -149,19 +149,19 @@ HWindow::InitMenu()
   		aMenu->AddSeparatorItem();
   		utils.AddMenuItem(aMenu,_("Delete Tracker"),M_DEL_TRACKER,this,this,0,0,
   			rutils.GetBitmapResource('BBMP',"BMP:TRASH"));
-  	 	
+
   	 	aMenu->AddSeparatorItem();
-        utils.AddMenuItem(aMenu,_("About…"),B_ABOUT_REQUESTED,be_app,be_app);	
+        utils.AddMenuItem(aMenu,_("About…"),B_ABOUT_REQUESTED,be_app,be_app);
   		aMenu->AddSeparatorItem();
     	utils.AddMenuItem(aMenu,_("Quit"),B_QUIT_REQUESTED,this,this,'Q',0);
-       
-    menuBar->AddItem( aMenu );     
+
+    menuBar->AddItem( aMenu );
     aMenu = new BMenu(_("Edit"));
     	utils.AddMenuItem(aMenu,_("Find…"),M_FIND_MSG,this,this,'F',0,
     		rutils.GetBitmapResource('BBMP',"BMP:SEARCH"));
     	utils.AddMenuItem(aMenu,_("Find Next"),M_FIND_NEXT_MSG,this,this,'G',0);
     menuBar->AddItem( aMenu );
-    this->AddChild(menuBar);	
+    this->AddChild(menuBar);
 }
 
 /***********************************************************
@@ -188,8 +188,8 @@ HWindow::MenusBeginning(void)
 	if(sel < 0)
 		item->SetEnabled(false);
 	else
-		item->SetEnabled(!enable);	
-	
+		item->SetEnabled(!enable);
+
 	if(fSearchText.Length() == 0)
 	{
 		KeyMenuBar()->FindItem(M_FIND_NEXT_MSG)->SetEnabled(false);
@@ -257,7 +257,7 @@ HWindow::MessageReceived(BMessage *message)
 		PRINT(( "Name: %s\n", name ));
 		message->FindPointer("parent",(void**)&item);
 		if(view)
-		//	view->AddServerUnder(new HTrackerItem(name,address,port,users,desc),item);	
+		//	view->AddServerUnder(new HTrackerItem(name,address,port,users,desc),item);
 			view->Add(new HTrackerItem(name,address,port,users,desc,false,item));
 		break;
 	}
@@ -292,7 +292,7 @@ HWindow::MessageReceived(BMessage *message)
 		HListView* view = cast_as(FindView("listview"),HListView);
 		view->Draw(view->Bounds());
 		BTextControl *control = cast_as(FindView("filter"),BTextControl);
-		if(strcmp( control->Text(),view->Keyword()) != 0) 
+		if(strcmp( control->Text(),view->Keyword()) != 0)
 		{
 			view->StartWatching(false);
 			view->SetKeyword(control->Text());
@@ -306,7 +306,7 @@ HWindow::MessageReceived(BMessage *message)
 	case M_SET_STATUS:
 	{
 		const char* text = message->FindString("text");
-		
+
 		fStatusString = text;
 		break;
 	}
@@ -353,9 +353,9 @@ HWindow::MessageReceived(BMessage *message)
 			msg.AddString("password","");
 			msg.AddString("address",item->Address());
 			msg.AddInt16("port",(int16)atoi(item->Port()));
-		
+
 			be_roster->Launch("application/x-vnd.takamatsu-silverwing",&msg);
-			
+
 			}
 		}
 		break;
@@ -387,7 +387,7 @@ HWindow::MessageReceived(BMessage *message)
 		if(view != NULL)
 			view->AddServer(new HTrackerItem(name,address,HTRK_TCPPORT,0,"",true));
 		break;
-	}	
+	}
 	/********* Find message **********/
 	case M_FIND_MSG:
 	{
@@ -440,7 +440,7 @@ HWindow::MessageReceived(BMessage *message)
 					if( (*(item+i))->isTracker() == false)
 					{
 						BString name = (*(item+i))->Name();
-		
+
 						path.Append(name.String());
 
 						BFile file(path.Path(),B_READ_WRITE|B_CREATE_FILE);
@@ -456,7 +456,7 @@ HWindow::MessageReceived(BMessage *message)
 							ninfo.SetType("text/hotline-bookmarks");
 						}
 						path.GetParent(&path);
-					} 
+					}
 				}
 			}
 		}// end if
@@ -477,7 +477,7 @@ HWindow::MessageReceived(BMessage *message)
 			{
 				HTrackerItem *item = cast_as(view->ItemAt(sel),HTrackerItem);
 				if( item->isTracker() )
-					btn->SetEnabled(true);	
+					btn->SetEnabled(true);
 				else
 					btn->SetEnabled(false);
 			}else
@@ -489,7 +489,7 @@ HWindow::MessageReceived(BMessage *message)
 			{
 				HTrackerItem *item = cast_as(view->ItemAt(sel),HTrackerItem);
 				if( item->isTracker() )
-					btn->SetEnabled(false);	
+					btn->SetEnabled(false);
 				else
 					btn->SetEnabled(true);
 			}else
@@ -513,11 +513,11 @@ HWindow::LookupAddress(const char* name)
 	path.Append("Trackers");
 	path.Append(name);
 	BMessage msg;
-	
+
 	BFile file(path.Path(),B_READ_ONLY);
 	if(file.InitCheck() == B_OK)
 	{
-		msg.Unflatten(&file);	
+		msg.Unflatten(&file);
 	}
 	return msg.FindString("address");
 }
@@ -555,21 +555,21 @@ HWindow::FindTrackers()
    	// Fileをすべてロードする
 	while( err == B_NO_ERROR )
 	{
-		err = dir.GetNextEntry( (BEntry*)&entry, TRUE );	
-			
+		err = dir.GetNextEntry( (BEntry*)&entry, TRUE );
+
 		if( entry.InitCheck() != B_NO_ERROR )
 			break;
-			
+
 		char name[B_FILE_NAME_LENGTH+1];
 		entry.GetName(name);
-		
-	
+
+
 		BFile file(&entry,B_READ_ONLY);
 		if(file.InitCheck() == B_OK)
 		{
 			BMessage msg;
-			msg.Unflatten(&file);	
-		
+			msg.Unflatten(&file);
+
 			const char* address = msg.FindString("address");
 			HListView *view = cast_as(FindView("listview"),HListView);
 			if(view != NULL)
@@ -592,7 +592,7 @@ HWindow::Search(const char* text,uint32 start)
 	{
 		const char* name = (*(items+i))->Name();
 		const char* desc = (*(items+i))->Description();
-	
+
 		if(name != NULL)
 		{
 			BString tmp = name;
@@ -642,18 +642,18 @@ HWindow::DeleteTracker(const char* name)
     entry.SetTo(path.Path());
     entry.GetRef(&ref);
     BMessenger tracker("application/x-vnd.Be-TRAK" );
-    BMessage msg( B_DELETE_PROPERTY ) ; 
-    BMessage specifier( 'sref' ) ; 
-    specifier.AddRef( "refs", &ref ) ; 
-    specifier.AddString( "property", "Entry" ) ; 
-    msg.AddSpecifier( &specifier ) ; 
+    BMessage msg( B_DELETE_PROPERTY ) ;
+    BMessage specifier( 'sref' ) ;
+    specifier.AddRef( "refs", &ref ) ;
+    specifier.AddString( "property", "Entry" ) ;
+    msg.AddSpecifier( &specifier ) ;
 
-	msg.AddSpecifier( "Poses" ) ; 
-    msg.AddSpecifier( "Window", 1 ) ; 
-                
-    BMessage reply ; 
-    tracker.SendMessage( &msg, &reply ); 
-}	
+	msg.AddSpecifier( "Poses" ) ;
+    msg.AddSpecifier( "Window", 1 ) ;
+
+    BMessage reply ;
+    tracker.SendMessage( &msg, &reply );
+}
 
 
 
@@ -670,10 +670,10 @@ HWindow::Pulse()
 	{
 		BString title;
 		if(items == 1)
-			title << items << " " << _("item") << "  ( " << fStatusString << " )"; 
+			title << items << " " << _("item") << "  ( " << fStatusString << " )";
 		else
-			title << items << " " << _("items") << "  ( " << fStatusString << " )"; 
-		stringView->SetText(title.String());	
+			title << items << " " << _("items") << "  ( " << fStatusString << " )";
+		stringView->SetText(title.String());
 	}
 }
 

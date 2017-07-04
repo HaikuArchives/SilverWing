@@ -3,7 +3,7 @@
 
 #include <String.h>
 #include <iostream>
-#include "CLVEasyItem.h"
+#include <santa/CLVEasyItem.h>
 #include "HTrackerConnection.h"
 
 class HTrackerItem;

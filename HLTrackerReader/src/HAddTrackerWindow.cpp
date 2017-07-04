@@ -2,8 +2,9 @@
 #include <TextControl.h>
 #include <Button.h>
 
+#include <santa/Colors.h>
+
 #include "HAddTrackerWindow.h"
-#include "Colors.h"
 #include "AppUtils.h"
 #include "MAlert.h"
 
@@ -43,14 +44,14 @@ HAddTrackerWindow::MessageReceived(BMessage *message)
 		this->SaveTracker(name,address);
 		this->PostMessage(B_QUIT_REQUESTED);
 		break;
-	}	
+	}
 	case M_END_NAME:
 	{
 		BTextControl *control1 = cast_as(FindView("name"),BTextControl);
 		BTextControl *control2 = cast_as(FindView("address"),BTextControl);
 
 		control2->SetText(control1->Text());
-		control2->TextView()->SelectAll();		
+		control2->TextView()->SelectAll();
 		break;
 	}
 	default:
@@ -104,8 +105,8 @@ HAddTrackerWindow::SaveTracker(const char* name,const char* address)
 	{
 		BMessage msg;
 		msg.AddString("address",address);
-		msg.Flatten(&file);			
-		
+		msg.Flatten(&file);
+
 		BMessage msg2(M_NEW_TRACKER);
 		msg2.AddString("address",address);
 		msg2.AddString("name",name);

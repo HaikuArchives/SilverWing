@@ -9,6 +9,7 @@
 #include <Path.h>
 #include <Application.h>
 #include <Directory.h>
+#include <File.h>
 #include <fs_attr.h>
 #include <MenuItem.h>
 #include <String.h>
@@ -44,7 +45,7 @@ HConnectWindow::InitGUI(bool edit)
 	rect.OffsetTo(B_ORIGIN);
 	BView *bg = new BView(rect,"bg",B_FOLLOW_ALL,B_WILL_DRAW);
 	bg->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
-	
+
 	BTextControl *control;
 	rect.top += 20;
 	rect.left += 20;
@@ -101,12 +102,12 @@ HConnectWindow::InitBookmarks()
 	BMenuItem *item;
 	BMessage *msg;
 	// Get Bookmarks directory
- 	status_t 	err = B_NO_ERROR; 
-	app_info info; 
-    BPath pt; 
-    be_app->GetAppInfo(&info); 
-    BEntry entry(&info.ref); 
-    entry.GetPath(&pt); 
+ 	status_t 	err = B_NO_ERROR;
+	app_info info;
+    BPath pt;
+    be_app->GetAppInfo(&info);
+    BEntry entry(&info.ref);
+    entry.GetPath(&pt);
     pt.GetParent(&pt);
 	pt.Append("Bookmarks");
 	::create_directory(pt.Path(),0777);
@@ -114,7 +115,7 @@ HConnectWindow::InitBookmarks()
 
    	// Read all server file
 	while( err == B_NO_ERROR ){
-		err = dir.GetNextEntry( (BEntry*)&entry, true );			
+		err = dir.GetNextEntry( (BEntry*)&entry, true );
 		if( entry.InitCheck() != B_NO_ERROR ){
 			break;
 		}
@@ -125,7 +126,7 @@ HConnectWindow::InitBookmarks()
 		item = new BMenuItem(name,msg);
 		menu->AddItem(item);
 	}
-	
+
 	return menu;
 }
 
@@ -184,11 +185,11 @@ HConnectWindow::MessageReceived(BMessage *message)
 void
 HConnectWindow::SaveServer(const char* address,const char* login ,const char* password,int16 port)
 {
-	app_info info; 
-    BPath pt; 
-    be_app->GetAppInfo(&info); 
-    BEntry entry(&info.ref); 
-    entry.GetPath(&pt); 
+	app_info info;
+    BPath pt;
+    be_app->GetAppInfo(&info);
+    BEntry entry(&info.ref);
+    entry.GetPath(&pt);
     pt.GetParent(&pt);
 	pt.Append("Bookmarks");
 	pt.Append(address);
@@ -208,7 +209,7 @@ HConnectWindow::SaveServer(const char* address,const char* login ,const char* pa
 		::create_directory(pt.Path(),0777);
 		this->SaveServer(address,login,password,port);
 	}
-	delete file;	
+	delete file;
 }
 
 /***********************************************************
@@ -217,11 +218,11 @@ HConnectWindow::SaveServer(const char* address,const char* login ,const char* pa
 void
 HConnectWindow::LoadServer(const char* name)
 {
-	app_info ainfo; 
-    BPath pt; 
-    be_app->GetAppInfo(&ainfo); 
-    BEntry entry(&ainfo.ref); 
-    entry.GetPath(&pt); 
+	app_info ainfo;
+    BPath pt;
+    be_app->GetAppInfo(&ainfo);
+    BEntry entry(&ainfo.ref);
+    entry.GetPath(&pt);
     pt.GetParent(&pt);
 	pt.Append("Bookmarks");
 	pt.Append(name);
@@ -234,7 +235,7 @@ HConnectWindow::LoadServer(const char* name)
 		BMessage msg;
 		msg.Unflatten(&file);
 		const char* host = msg.FindString("address");
-		const char* login = msg.FindString("login");	
+		const char* login = msg.FindString("login");
 		const char* pass = msg.FindString("password");
 		iport = msg.FindInt16("port");
 		int32 d = iport;

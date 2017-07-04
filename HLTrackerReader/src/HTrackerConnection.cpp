@@ -3,6 +3,7 @@
 #include "hl_magic.h"
 #include <String.h>
 #include <File.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <Application.h>
 #include <stdio.h>
@@ -74,7 +75,7 @@ HTrackerConnection::Main()
 
 	register int pos;
 	//cout << "Receiving from tracker:" << fAddress.String() <<endl;
-	
+
 	BMessage msg(M_SET_STATUS);
 	//******** SilverWingの設定ファイルの読み込み *************//
 	BMessage pref;
@@ -85,7 +86,7 @@ HTrackerConnection::Main()
 		goto end;
 	}
 	pref.Unflatten(&file);
-	
+
 	str = "";
 	str << _("Connecting to") << " " << fAddress.String();
 	msg.AddString("text",str.String());
@@ -100,14 +101,14 @@ HTrackerConnection::Main()
 		bool auth = pref.FindBool("auth");
 		const char* user = pref.FindString("firewall_user");
 		const char* password = pref.FindString("firewall_password");
-	
+
 		addr.SetTo(firewall,port);
 		if(fEndpoint->Connect(addr) != B_OK)
 		{
 			(new MAlert(_("SOCKS5 Error"),_("Cannot connect to SOCKS5 server"),_("OK"),NULL,NULL))->Go();
 			goto end;
 		}
-		
+
 		// authenticate with firewall
 		socks_buf[0] = 0x05; /* protocol version */
 		socks_buf[1] = 0x01; /* number of methods */
@@ -143,7 +144,7 @@ HTrackerConnection::Main()
 				goto end;
 			}
 		}
-		
+
 		socks_buf[0] = 0x05; /* protocol version */
 		socks_buf[1] = 0x01; /* command TCP connect */
 		socks_buf[2] = 0x00; /* reserved */
@@ -151,7 +152,7 @@ HTrackerConnection::Main()
 		uint32 ad = inet_addr(fAddress.String());
 		memcpy(&socks_buf[4], &ad, 4);
 		uint16 pt = htons(fPort);
-		memcpy(&socks_buf[8], &pt, 2);	
+		memcpy(&socks_buf[8], &pt, 2);
 		fEndpoint->Send(socks_buf,10);
 		result = fEndpoint->Receive(socks_buf, 10);
 		// check what firewall says
@@ -161,8 +162,8 @@ HTrackerConnection::Main()
 			goto end;
 		}
 	}else{
-	//******** ノーマルな接続 ************//	
-		addr.SetTo(fAddress.String(),fPort);		
+	//******** ノーマルな接続 ************//
+		addr.SetTo(fAddress.String(),fPort);
 		if(fEndpoint->InitCheck() != B_OK)
 		{
 			(new MAlert(_("Error"),_("Socket initialize failed"),_("OK")))->Go();
@@ -171,13 +172,13 @@ HTrackerConnection::Main()
 		if( fEndpoint->Connect(addr) != B_OK)
 		{
 			BString s = _("Could not connect to tracker");
-			
+
 			s << ": " << fAddress;
-			(new MAlert(_("Error"),s.String(),_("OK")))->Go(); 
+			(new MAlert(_("Error"),s.String(),_("OK")))->Go();
 			goto end;
 		}
 
-	}	
+	}
 	str << _("Sending command to") << " " << fAddress.String();
 	msg.ReplaceString("text",str.String());
 	be_app->PostMessage(&msg);
@@ -191,7 +192,7 @@ HTrackerConnection::Main()
 //#endif
 	//task.max = nservers;
 	//UpdateTask(&task);
-	
+
 	str << _("Receiving servers from") << "  " << fAddress.String();
 	msg.ReplaceString("text",str.String());
 	be_app->PostMessage(&msg);
@@ -217,9 +218,9 @@ HTrackerConnection::Main()
 			goto end;
 		nusers = ntohs(nusers);
 		b_read(fEndpoint,&pad,sizeof(uint16));
-		
+
 		b_read(fEndpoint,&len,sizeof(len));
-	
+
 		::memset(name,0,1024);
 		if (b_read(fEndpoint, name, len) == -1)
 			goto end;
@@ -234,20 +235,20 @@ HTrackerConnection::Main()
 		utils.ConvertReturnsToLF(desc);
 		pos = sprintf(outbuf, "%16s:%-5u | %5u | %s | %s \n",
 			inet_ntoa(a), sport, nusers, name,desc);
-		
+
 
 		dname = new char[1024];
 		::memset(dname,0,1024);
 		::memcpy(dname,name,strlen(name));
 		utils.ConvertToUTF8(&dname,fEncoding-1);
 		//utils.EUCKR2UTF8(&dname);
-		
+
 		ddesc = new char[1024];
 		::memset(ddesc,0,1024);
 		::memcpy(ddesc,desc,strlen(desc));
 		utils.ConvertToUTF8(&ddesc,fEncoding-1);
 		//utils.EUCKR2UTF8(&ddesc);
-		
+
 		BMessage message(H_RECEIVE_SERVER);
 		message.AddString("tracker",fAddress.String());
 		message.AddString("address",inet_ntoa(a));
@@ -258,8 +259,8 @@ HTrackerConnection::Main()
 		message.AddPointer("parent",fParentItem);
 		be_app->PostMessage(&message);
 		delete[] dname;
-		delete[] ddesc;	
-	}	
+		delete[] ddesc;
+	}
 end:
 	//hx_trans--;
 	msg.ReplaceString("text","idle");
