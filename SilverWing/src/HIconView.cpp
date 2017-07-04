@@ -6,7 +6,7 @@
 #include "HIconView.h"
 #include "AppUtils.h"
 #include "HApp.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 
 /***********************************************************
  * Constructor.
@@ -15,9 +15,9 @@ HIconView::HIconView(BRect rect,uint32 icon)
 	:BView(rect,"iconview",B_FOLLOW_ALL,B_WILL_DRAW)
 	,fIcon(icon)
 	,fBitmap(NULL)
-{	
+{
 	fBad = ((HApp*)be_app)->IsBadmoon();
-	LoadUserIcon();	
+	LoadUserIcon();
 }
 
 /***********************************************************

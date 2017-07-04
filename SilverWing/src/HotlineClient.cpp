@@ -1,9 +1,10 @@
 #include <netdb.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <unistd.h> 
+#include <unistd.h>
 #include <Beep.h>
 #include <Autolock.h>
 
@@ -27,6 +28,7 @@
 #include "HPrefs.h"
 
 #include <Debug.h>
+#include <sys/time.h>
 
 //#define DEBUG
 
@@ -54,9 +56,9 @@ HotlineClient::HotlineClient()
 	,fSilverWingMode(false)
 	,fContinue(false)
 {
-	fPrvChatList.MakeEmpty();	
+	fPrvChatList.MakeEmpty();
 	fNewsCategoryArray.MakeEmpty();
-	
+
 	fSocketLocker = new BLocker();
 }
 
@@ -79,22 +81,22 @@ HotlineClient::~HotlineClient()
 	for(int i = 0;i<count;i++)
 		delete fNewsCategoryArray.ItemAt(i);
 	fNewsCategoryArray.MakeEmpty();
-	
+
 	count = fFileTransArray.CountItems();
 	for(int i = 0;i<count;i++)
 		delete fFileTransArray.ItemAt(i);
 	fFileTransArray.MakeEmpty();
-	
+
 	count = fFileListArray.CountItems();
 	for(int i = 0;i<count;i++)
 		delete fFileListArray.ItemAt(i);
 	fFileListArray.MakeEmpty();
-	
+
 	count = fTaskList.CountItems();
 	for(int i = 0;i<count;i++)
 		delete fTaskList.ItemAt(i);
 	fTaskList.MakeEmpty();
-	
+
 	delete fSocketLocker;
 }
 
@@ -112,7 +114,7 @@ HotlineClient::MessageReceived(BMessage *message)
 			if(message->FindString("text",&topic) == B_OK)
 			{
 				uint32 pcref = message->FindInt32("pcref");
-				SendPrvChatTopicChange(topic,pcref);	
+				SendPrvChatTopicChange(topic,pcref);
 			}
 			break;
 		}
@@ -134,7 +136,7 @@ HotlineClient::MessageReceived(BMessage *message)
 		const char* filename;
 		const char* dest_path;
 		if(message->FindString("file_path",&file_path) == B_OK
-			&& message->FindString("dest_path",&dest_path) == B_OK 
+			&& message->FindString("dest_path",&dest_path) == B_OK
 			&& message->FindString("file_name",&filename) == B_OK)
 		{
 			SendFileMove(filename,file_path,dest_path);
@@ -154,7 +156,7 @@ HotlineClient::MessageReceived(BMessage *message)
 		message->FindInt32("sock",(int32*)&sock);
 		SendChatInvite(pcref,sock);
 		break;
-	}	
+	}
 	case H_CHAT_INVITE:
 	{
 		uint32 sock,pcref;
@@ -207,7 +209,7 @@ HotlineClient::MessageReceived(BMessage *message)
 		int16 reply = message->FindInt16("reply_thread");
 		int16 parent = message->FindInt16("parent_thread");
 		this->SendNewsPostThread(category, reply, subject, parent, msg);
-		
+
 		break;
 	}
 	case H_DELETE_THREAD:
@@ -234,7 +236,7 @@ HotlineClient::MessageReceived(BMessage *message)
 	{
 		const char* path = message->FindString("path");
 		const char* text = message->FindString("text");
-		this->SendNewsCreateCategory(path,text);		
+		this->SendNewsCreateCategory(path,text);
 		break;
 	}
 	case H_NEWS_SEND_GET_ARTICLELIST:
@@ -255,17 +257,17 @@ HotlineClient::MessageReceived(BMessage *message)
 			break;
 		}
 	case H_LOGIN_REQUESTED:
-		{		
+		{
 			const char* login = message->FindString("login");
 			const char* password = message->FindString("password");
 			const char* nick = message->FindString("nick");
 			int32 icon = message->FindInt32("icon");
-			
+
 			Login(login,password,nick,icon);
 			fConnected = true;
-			
+
 			StartThread();
-			
+
 			fHxTrans--;
 			fHxTrans++;
 			break;
@@ -325,7 +327,7 @@ HotlineClient::MessageReceived(BMessage *message)
 	{
 		const char* path= message->FindString("remotepath");
 		const char* localpath = message->FindString("localpath");
-	
+
 		uint32 data_size = message->FindInt32("data_size");
 		SendFileGet(path,localpath,data_size,0);
 		break;
@@ -360,7 +362,7 @@ HotlineClient::MessageReceived(BMessage *message)
 	{
 		uint32 icon =message->FindInt32("icon");
 		const char* nick = message->FindString("nick");
-		
+
 		SendUserChange(nick,icon);
 		break;
 	}
@@ -380,7 +382,7 @@ HotlineClient::MessageReceived(BMessage *message)
 		const char* path = message->FindString("path");
 		this->SendGetFileInfo(path);
 		break;
-	}	
+	}
 	default:
 		BLooper::MessageReceived(message);
 	}
@@ -391,7 +393,7 @@ HotlineClient::MessageReceived(BMessage *message)
  ***********************************************************/
 bool
 HotlineClient::Connect(const char* address,uint16 port)
-{	
+{
 	BNetAddress addr;
 	fHxTrans = 1;
 	if(!fEndpoint)
@@ -413,7 +415,7 @@ HotlineClient::Connect(const char* address,uint16 port)
 	BNetDebug::Enable(true);
 #endif
 	AddTask(_("Connecting…"),fHxTrans);
-	
+
 	if(fEndpoint->InitCheck() != B_NO_ERROR)
 	{
 		PRINT(("INIT CONNECTION ERROR\n"));
@@ -424,7 +426,7 @@ HotlineClient::Connect(const char* address,uint16 port)
 	} else {
 		//************ SOCKS5 Firewall or NOT *****************//
 		if(fUseSock5)
-		{	
+		{
 			// ファイアーウォールへ接続
 			const char* firewall;
 			((HApp*)be_app)->Prefs()->GetData("firewall",&firewall);
@@ -451,9 +453,9 @@ HotlineClient::Connect(const char* address,uint16 port)
 			else
 				authType = 0x00; /* no authorization required */
 			buf[2] = authType;
-			
+
 			SendData(buf,3);
-			
+
 			int result = ReceiveData(buf,2);
 			if (result != 2 || buf[0] != 0x05 || (buf[1] != authType && buf[1] != 0x00))	// didn't read all; not SOCKS5; or won't accept method requested
 			{
@@ -477,9 +479,9 @@ HotlineClient::Connect(const char* address,uint16 port)
 				size = strlen(password) + 1;
 				buf[offset++] = (int8) size;
 				memcpy(&buf[offset], password, size);		offset += size;
-				
+
 				SendData(buf, offset);
-				
+
 				result = ReceiveData(buf, 2);
 				if (result != 2 || buf[0] != 1 || buf[1] != 0)
 				{
@@ -497,7 +499,7 @@ HotlineClient::Connect(const char* address,uint16 port)
 			uint32 ad = inet_addr(address);
 			memcpy(&buf[4], &ad, 4);
 			uint16 pt = htons(port);
-			memcpy(&buf[8], &pt, 2);	
+			memcpy(&buf[8], &pt, 2);
 			SendData(buf,10);
 			result = ReceiveData(buf, 10);
 			// check what firewall says
@@ -522,27 +524,27 @@ HotlineClient::Connect(const char* address,uint16 port)
 					(new MAlert(_("Error"),_("Could not connect to server"),_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
 				return false;
 			}
-			
+
 		}
 		UpdateTask(fHxTrans,4);
-		
+
 		//fEndpoint->SetNonBlocking(false);
-			
+
 		fHxTrans++;
 		if(SendData(HTLC_MAGIC, HTLC_MAGIC_LEN) != HTLC_MAGIC_LEN)
 		{
-			PRINT(("send(HTLC_MAGIC, 0) failed:\n"));		
+			PRINT(("send(HTLC_MAGIC, 0) failed:\n"));
 			return false;
 		}
 		UpdateTask(fHxTrans-1,4);
-		if (ReceiveData(buf, HTLS_MAGIC_LEN) != HTLS_MAGIC_LEN) 
+		if (ReceiveData(buf, HTLS_MAGIC_LEN) != HTLS_MAGIC_LEN)
 		{
 			PRINT(("recv(HTLS_MAGIC) failed\n"));
 			return false;
 		}
 		RemoveTask(fHxTrans-1);
 		return true;
-	}	
+	}
 	return false;
 }
 
@@ -559,7 +561,7 @@ HotlineClient::Connecting(void* data)
 	{
 		PRINT(("Connect sucess:%s\n",client->fAddress.String() ));
 		if(!client->fCancel)
-			be_app->PostMessage(new BMessage(H_CONNECT_SUCCESS));	
+			be_app->PostMessage(new BMessage(H_CONNECT_SUCCESS));
 	}else{
 		// remove all task
 		((HApp*)be_app)->TaskWindow()->PostMessage(M_REMOVE_ALL_TASK);
@@ -575,7 +577,7 @@ bool
 HotlineClient::Login(const char *login, const char *pass,const char *nick, uint16 icon)
 {
 	uint8 buf[1024];
-	
+
 	struct hx_hdr *h = (struct hx_hdr *)buf;
 	struct hx_data_hdr *dh = (struct hx_data_hdr *)(&(buf[SIZEOF_HX_HDR]));
 	uint16 llen, plen, nlen, hc = 1;
@@ -629,7 +631,7 @@ HotlineClient::Login(const char *login, const char *pass,const char *nick, uint1
 		BString bnick = nick;
 		int32 encoding;
 		((HApp*)be_app)->Prefs()->GetData("encoding",(int32*)&encoding);
-		
+
 		TextUtils utils;
 		if(encoding)
 			utils.ConvertFromUTF8(bnick,encoding-1);
@@ -685,7 +687,7 @@ HotlineClient::Close()
 			PRINT(( "Waiting the end of rcv thread\n"));
 			::wait_for_thread(fRcvThread,&status);
 		}
-	}*/	
+	}*/
 	if(fEndpoint)
 		fEndpoint->Close();
 	if(fConnectThread>=0)
@@ -698,14 +700,14 @@ HotlineClient::Close()
 		PRINT(( "Waiting the end of rcv thread\n"));
 		::wait_for_thread(fRcvThread,&status);
 	}
-		
+
 	delete fEndpoint;
 	fEndpoint = NULL;
 	fConnected = false;
-	
+
 	fRcvThread = -1;
 	PRINT(( "Waiting the end of connect thread2\n"));
-	
+
 	hx_reset();
 	PRINT(( "Close end:%s Line:%d\n",__FILE__,__LINE__ ));
 }
@@ -733,7 +735,7 @@ HotlineClient::StartThread()
 /***********************************************************
  * Receive thread function.
  ***********************************************************/
-int32 
+int32
 HotlineClient::ThreadEntry(void *arg)
 {
 	HotlineClient *obj = (HotlineClient*)arg;
@@ -753,7 +755,7 @@ HotlineClient::ListenToServer()
 	timeout.tv_sec=30; timeout.tv_usec=0;
 	bigtime_t btimeout = 50000; //00.5 sec
 	fContinue = true;
-	
+
 	while(fContinue)
 	{
 		/*FD_ZERO(&readfds);
@@ -766,11 +768,11 @@ HotlineClient::ListenToServer()
 			//bool readyToRead  = FD_ISSET(fEndpoint->Socket(), &readfds);
 			//if(!readyToRead)
 			//	continue;
-			
+
 			r = fEndpoint->Receive(&fHxBuf[fHxPos],fHxLen);
 			//r = ReceiveData(&fHxBuf[fHxPos],fHxLen);
-			if (r == B_ERROR ) 
-			{	
+			if (r == B_ERROR )
+			{
 				BString title = _("Connection was closed");
 				title << "\n" << fEndpoint->ErrorStr() << " " << _("Type")<<": " << (long)fEndpoint->Error();
 				beep();
@@ -786,11 +788,11 @@ HotlineClient::ListenToServer()
 			}
 			fHxPos += r;
 			fHxLen -= r;
-			
+
 			PRINT(( "fHxPos:%d fHxLen:%d rcv:%d\n",fHxPos,fHxLen,r));
-			
-			if (!fHxLen) 
-			{ 
+
+			if (!fHxLen)
+			{
 				if(fHxFun >=0)
 					Fook_Hx_Fun();
 				else
@@ -813,12 +815,12 @@ HotlineClient::ListenToServer()
 				break;
 			}
 			bool keep;
-			((HApp*)be_app)->Prefs()->GetData("keep_alive",&keep);	
+			((HApp*)be_app)->Prefs()->GetData("keep_alive",&keep);
 			if(keep)
 				SendPing();
 		}else{
 			bool keep;
-			((HApp*)be_app)->Prefs()->GetData("keep_alive",&keep);	
+			((HApp*)be_app)->Prefs()->GetData("keep_alive",&keep);
 			if(keep)
 				SendPing();
 		}
@@ -839,7 +841,7 @@ HotlineClient::ReceiveChat()
 	uint32 pcref = 0;
 	char *chat = NULL;
 	uint16 len = 0;
-	
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 		switch (ntohs(dh->type)) {
 			case HTLC_DATA_CHAT_REF:
@@ -855,13 +857,13 @@ HotlineClient::ReceiveChat()
 	dh_end()
 	if (!len)
 		goto ret;
-	
+
 	if (!pcref)
 	{
 		BMessage msg(H_RCV_CHAT);
 		msg.AddString("text",chat);
 		be_app->PostMessage(&msg);
-	}else{	
+	}else{
 		BMessage msg(H_RCV_PRV_CHAT);
 		msg.AddString("text",chat);
 		msg.AddInt32("pcref",(int32)pcref);
@@ -902,7 +904,7 @@ HotlineClient::ReceiveAgreement()
 	char *text = NULL;
 
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
-	
+
 	if (ntohs(dh->type) == HTLS_DATA_AGREEMENT)
 	{
 		if(ntohs(dh->len) > 0)
@@ -912,11 +914,11 @@ HotlineClient::ReceiveAgreement()
 			::memset(text,0,ntohs(dh->len));
 			::memcpy(text,dh->data,ntohs(dh->len));
 			text[ntohs(dh->len)] = '\0';
-			
+
 			BMessage msg(H_RCV_AGREEMENT);
 			msg.AddString("text",text);
-			be_app->PostMessage(&msg);	
-		}	
+			be_app->PostMessage(&msg);
+		}
 	}
 	dh_end()
 
@@ -937,7 +939,7 @@ HotlineClient::ReceiveMessage()
 	char *msg = NULL;
 	uint16 icon;
 	BMessage *mesg = NULL;
-	
+
 	::memset(nick,0,32);
 
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
@@ -960,9 +962,9 @@ HotlineClient::ReceiveMessage()
 				break;
 		}
 	dh_end()
-	
+
 	PRINT(( "Message Len: %d\n" ,msglen ));
-	
+
 	if (!msglen)
 		goto ret;
 
@@ -987,7 +989,7 @@ ret:
 /***********************************************************
  * Receive polite quit
  ***********************************************************/
-void 
+void
 HotlineClient::ReceivePliteQuit()
 {
 	uint16 msglen = 0;
@@ -995,7 +997,7 @@ HotlineClient::ReceivePliteQuit()
 	BString result;
 	TextUtils utils;
 	int32 encoding = 0;
-	
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 		switch (ntohs(dh->type)) {
 			case HTLC_DATA_MSG:
@@ -1012,7 +1014,7 @@ HotlineClient::ReceivePliteQuit()
 		utils.ConvertToUTF8(&msg,encoding-1);
 	result << "\n" << msg;
 	(new MAlert(_("Message"),result.String(),_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
-	
+
 	delete[] msg;
 	this->Close();
 	hx_reset();
@@ -1025,13 +1027,13 @@ void
 HotlineClient::ReceiveTask()
 {
 	struct hx_hdr *h = (struct hx_hdr*)fHxBuf;
-	
+
 	uint32 trans = ntohl(h->trans);
 	uint32 flag = ntohl(h->flag);
 	//uint16 hc = ntohs(h->hc);
 
 	PRINT(( "Receive Task:%d Flag:%d\n" ,trans , flag ));
-	
+
 	if(trans == fLoginTask)
 	{
 		fLoginTask = 0;
@@ -1046,7 +1048,7 @@ HotlineClient::ReceiveTask()
 			return;
 		}
 	}
-	
+
 	HLTASK *hltask = FindTaskList(trans);
 	if(flag == 1 && trans != fSWModeTask)
 	{
@@ -1060,7 +1062,7 @@ HotlineClient::ReceiveTask()
 	if(!hltask)
 	{
 		hx_reset();
-		return;	
+		return;
 	}
 	//
 	switch(hltask->type)
@@ -1068,7 +1070,7 @@ HotlineClient::ReceiveTask()
 	case T_USER_LIST_TASK:
 		{
 			ReceiveUserList();
-			break;	
+			break;
 		}
 	case T_FILE_LIST_TASK:
 		{
@@ -1100,7 +1102,7 @@ HotlineClient::ReceiveTask()
 	case T_FILE_INFO_TASK:
 		{
 			ReceiveFileInfo();
-			break;		
+			break;
 		}
 	case T_USER_INFO_TASK:
 		{
@@ -1183,7 +1185,7 @@ HotlineClient::SendMkDir(const char* path)
 	} else {
 		h->len = h->len2 = htonl(2 + SIZEOF_HX_DATA_HDR + nlen);
 		h->hc = htons(1);
-		
+
 		SendData(buf,26);
 		SendData(p,nlen);
 	}
@@ -1202,16 +1204,16 @@ HotlineClient::SendGetFileInfo(const char* path)
 	uint16 nlen;
 	char const *p;
 	uint32 task = fHxTrans;
-	
+
 	h->type = htonl(HTLC_HDR_FILE_GETINFO);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
 	if (!path || !path[0] || !(p = dirchar_basename(path)))
 		return;
-	
+
 	AddTask(_("Getting file infomation…"),task);
 	AddTaskList(task,T_FILE_INFO_TASK);
-			
+
 	dh->type = htons(HTLC_DATA_FILE);
 	dh->len = htons((nlen = strlen(p)));
 	if (p != path) {
@@ -1219,7 +1221,7 @@ HotlineClient::SendGetFileInfo(const char* path)
 		h->len = h->len2 = htonl(2 + (SIZEOF_HX_DATA_HDR * 2) + ntohs(dh->len) + nlen);
 		h->hc = htons(2);
 		this->UpdateTask(task,3);
-	
+
 		SendData(buf,26);
 		UpdateTask(task,5);
 		SendData( p, nlen);
@@ -1231,7 +1233,7 @@ HotlineClient::SendGetFileInfo(const char* path)
 		h->len = h->len2 = htonl(2 + SIZEOF_HX_DATA_HDR + nlen);
 		h->hc = htons(1);
 		this->UpdateTask(task,3);
-		
+
 		SendData( buf, 26);
 		UpdateTask(task,5);
 		SendData( p, nlen);
@@ -1243,7 +1245,7 @@ HotlineClient::SendGetFileInfo(const char* path)
 /***********************************************************
  * Send get article list.
  ***********************************************************/
-void 
+void
 HotlineClient::SendNewsCategory(const char* path)
 {
 	uint8 buf[SIZEOF_HX_HDR];
@@ -1258,7 +1260,7 @@ HotlineClient::SendNewsCategory(const char* path)
 	if (!path || !path[0] || (path[0] == dir_char && !path[1])) {
 		h->len = h->len2 = htonl(2);
 		h->hc = 0;
-		
+
 		SendData(buf, SIZEOF_HX_HDR);
 		//this->UpdateTask(trans->trans,6);
 		return;
@@ -1266,17 +1268,17 @@ HotlineClient::SendNewsCategory(const char* path)
 	dh = news_path_to_hldir(path, 0);
 	h->len = h->len2 = htonl(2 + SIZEOF_HX_DATA_HDR + ntohs(dh->len));
 	h->hc = htons(2);
-	
+
 	NewsCategoryTrans *task = new NewsCategoryTrans;
 	task->trans = fHxTrans-1;
 	task->path = path;
-	
+
 	if(this->Lock())
 	{
 		fNewsCategoryArray.AddItem(task);
 		this->Unlock();
 	}
-	
+
 	SendData(buf, SIZEOF_HX_HDR);
 	this->UpdateTask(fHxTrans-1,4);
 	SendData(dh, SIZEOF_HX_DATA_HDR + ntohs(dh->len));
@@ -1288,7 +1290,7 @@ HotlineClient::SendNewsCategory(const char* path)
 /***********************************************************
  * Send create category command.
  ***********************************************************/
-void 
+void
 HotlineClient::SendNewsCreateCategory(const char* path, const char* name)
 {
 	uint8 buf[22];
@@ -1309,17 +1311,17 @@ HotlineClient::SendNewsCreateCategory(const char* path, const char* name)
 	if( strlen(path) == 0)
 	{
 		h->len = h->len2 = htonl( 2 + SIZEOF_HX_DATA_HDR + ntohs(dh2->len) );
-		
+
 		SendData(h,22);
 		SendData(dh2,SIZEOF_HX_DATA_HDR + ntohs(dh2->len));
 		xfree(dh2);
 		return;
-	}		
+	}
 	h->hc = htons(2);
 	dh = this->news_path_to_hldir(path,0);
 	h->len = h->len2 = htonl( 2 + SIZEOF_HX_DATA_HDR*2 + ntohs(dh->len)+ ntohs(dh2->len) );
 	this->UpdateTask(fHxTrans-1,2);
-	
+
 	SendData(  buf, 22);
 	UpdateTask(fHxTrans-1,4);
 	SendData(dh2,SIZEOF_HX_DATA_HDR + ntohs(dh2->len) );
@@ -1335,14 +1337,14 @@ HotlineClient::SendNewsCreateCategory(const char* path, const char* name)
 /***********************************************************
  * Send create news folder command.
  ***********************************************************/
-void 
+void
 HotlineClient::SendNewsCreateFolder(const char* path, const char* name)
 {
 	uint8 buf[22];
 	struct hx_hdr *h = (struct hx_hdr *)buf;
 	struct hx_data_hdr *dh = NULL;
 	struct hx_data_hdr *dh2;
-	
+
 	this->AddTask(_("Creating news folder…"),fHxTrans);
 	h->type = htonl(HTLC_HDR_MAKENEWSDIR);
 	h->trans = htonl(fHxTrans++);
@@ -1357,13 +1359,13 @@ HotlineClient::SendNewsCreateFolder(const char* path, const char* name)
 	if( strlen(path) == 0)
 	{
 		h->len = h->len2 = htonl( 2 + SIZEOF_HX_DATA_HDR + ntohs(dh2->len) );
-		
+
 		SendData( h,22);
 		SendData( dh2,SIZEOF_HX_DATA_HDR + ntohs(dh2->len));
-		
+
 		xfree(dh2);
 		return;
-	}		
+	}
 	h->hc = htons(2);
 	dh = this->news_path_to_hldir(path,0);
 	h->len = h->len2 = htonl( 2 + SIZEOF_HX_DATA_HDR*2 + ntohs(dh->len)+ ntohs(dh2->len) );
@@ -1382,7 +1384,7 @@ HotlineClient::SendNewsCreateFolder(const char* path, const char* name)
 /***********************************************************
  * Send delete news thread command.
  ***********************************************************/
-void 
+void
 HotlineClient::SendDeleteThread(const char* category, uint16 thread)
 {
 	uint8 buf[22+6];
@@ -1401,9 +1403,9 @@ HotlineClient::SendDeleteThread(const char* category, uint16 thread)
 	S16HTON(thread, dh->data);
 
 	dh2 = this->news_path_to_hldir(category,0);
-	
+
 	h->len = h->len2 = htonl( 2 +SIZEOF_HX_DATA_HDR + 6+ ntohs(dh2->len) );
-	
+
 	SendData(  buf, 28);
 	SendData( dh2,SIZEOF_HX_DATA_HDR+ ntohs(dh2->len));
 	xfree(dh2);
@@ -1412,13 +1414,13 @@ HotlineClient::SendDeleteThread(const char* category, uint16 thread)
 /***********************************************************
  * Send refuse private chat.
  ***********************************************************/
-void 
+void
 HotlineClient::SendDeclineChat(uint32 pcref)
 {
 	uint8 buf[30];
 	struct hx_hdr *h = (struct hx_hdr *)buf;
 	struct hx_data_hdr *dh = (struct hx_data_hdr *)(&(buf[SIZEOF_HX_HDR]));
-	
+
 	h->type = htonl(HTLC_HDR_CHAT_DECLINE);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
@@ -1427,7 +1429,7 @@ HotlineClient::SendDeclineChat(uint32 pcref)
 	dh->type = htons(HTLC_DATA_CHAT_REF);
 	dh->len = htons(4);
 	S32HTON(pcref, dh->data);
-	
+
 	SendData(buf, 30 );
 }
 
@@ -1435,25 +1437,25 @@ HotlineClient::SendDeclineChat(uint32 pcref)
 /***********************************************************
  * Send delete category command.
  ***********************************************************/
-void 
+void
 HotlineClient::SendDeleteCategory(const char* category)
 {
 	uint8 buf[22];
 	struct hx_hdr *h = (struct hx_hdr *)buf;
 	struct hx_data_hdr *dh;
-	
+
 	h->type = htonl(HTLC_HDR_DELNEWSDIRCAT);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
-	
+
 	h->hc = htons(2);
-	
+
 	dh = this->news_path_to_hldir(category,0);
 	h->len = h->len2 = htonl( 2 + SIZEOF_HX_DATA_HDR + ntohs(dh->len) );
-	
+
 	SendData(  buf, 22);
 	SendData(dh,SIZEOF_HX_DATA_HDR + ntohs(dh->len) );
-	
+
 	xfree(dh);
 }
 
@@ -1465,7 +1467,7 @@ void
 HotlineClient::ReceiveNewsFolderItem()
 {
 	struct hx_hdr *hdr = (hx_hdr*)fHxBuf;
-	
+
 	uint8	hc = ntohs(hdr->hc);
 	uint32 trans = ntohl(hdr->trans);
 	uint32 index = 0;
@@ -1499,10 +1501,10 @@ HotlineClient::ReceiveNewsFolderItem()
 			uint16 type = ntohs(folder->item_type);
 			uint16 nlen = ntohs(folder->len);
 			uint16 posted = ntohs(folder->posted);
-		
+
 			uint8 slen;
 			int name_offset = 0;
-			if(type == 3 ) 
+			if(type == 3 )
 			{
 				::memcpy(&slen ,&fHxBuf[ offset+ 32],1);
 				name_offset = 33;
@@ -1538,7 +1540,7 @@ HotlineClient::ReceiveNewsFolderItem()
 /***********************************************************
  * Receive news article list.
  ***********************************************************/
-void 
+void
 HotlineClient::ReceiveNewsCategory()
 {
 	typedef struct{
@@ -1574,7 +1576,7 @@ HotlineClient::ReceiveNewsCategory()
 		if(task->trans == trans)
 		{
 			category = task->path;
-			fNewsCategoryArray.RemoveItem(i);	
+			fNewsCategoryArray.RemoveItem(i);
 			delete task;
 		}
 	}
@@ -1585,7 +1587,7 @@ HotlineClient::ReceiveNewsCategory()
 		index = ntohs(item->index);
 		uint16 base_year = ntohs(item->base_year);
 		uint32 tmpsec;// = ntohl(item->seconds);
-		
+
 		::memcpy(&tmpsec,&fHxBuf[offset - 24 + 10],4);
 		uint32 sec = ntohl(tmpsec);
 
@@ -1596,7 +1598,7 @@ HotlineClient::ReceiveNewsCategory()
 		}else if(base_year == 1904){
 			sec -= 2082844800U + 32400;
 		}
-		
+
 		//uint32 newssize = ntohl(item->newssize);
 		uint32 parent_id = ntohl(item->parent_id);
 
@@ -1611,23 +1613,23 @@ HotlineClient::ReceiveNewsCategory()
 		data = (NewsItemData*)&fHxBuf[offset];
 		offset += 1;
 		memcpy(&datasize,data->len,1);
-		
+
 		sender = new char[datasize+1];
 		memcpy(sender,&fHxBuf[offset],datasize);
 		sender[datasize] = '\0';
-	
+
 		offset += datasize;
 
 		data = (NewsItemData*)&fHxBuf[offset];
 		offset += 1;
 		memcpy(&datasize,data->len,1);
-		mime = new char[datasize+1];		
+		mime = new char[datasize+1];
 		memcpy(mime,&fHxBuf[offset],datasize);
 		mime[datasize] = '\0';
-		
+
 		offset += datasize;
 		// メッセージを作成して送信
-	
+
 		msg.AddString("subject",subject);
 		msg.AddString("sender",sender);
 		//msg.AddString("date",date.String());
@@ -1668,7 +1670,7 @@ HotlineClient::SendFileMove(const char* filename,const char* path ,const char* d
 	PRINT(( "Dest: %s\n" , dest_path ));
 
 	AddTask(_("Moving files…"),fHxTrans);
-	
+
 	h->type = htonl(HTLC_HDR_FILE_MOVE);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
@@ -1681,11 +1683,11 @@ HotlineClient::SendFileMove(const char* filename,const char* path ,const char* d
 	if (strlen(path) > 0) {
 		dh = path_to_hldir(path, false);
 		dest = path_to_hldir(dest_path,false);
-		dest->type = htons(HTLC_DATA_DIR_RENAME); 
+		dest->type = htons(HTLC_DATA_DIR_RENAME);
 		h->len = h->len2 = htonl(2 + (SIZEOF_HX_DATA_HDR * 3) + ntohs(dest->len)
 									+ ntohs(dh->len) + nlen);
 		h->hc = htons(3);
-		
+
 		UpdateTask(fHxTrans-1,4);
 		SendData( buf, 26);
 		UpdateTask(fHxTrans-1,5);
@@ -1696,15 +1698,15 @@ HotlineClient::SendFileMove(const char* filename,const char* path ,const char* d
 		SendData( dest, SIZEOF_HX_DATA_HDR + ntohs(dest->len));
 		UpdateTask(fHxTrans-1,8);
 		RemoveTask(fHxTrans-1);
-		
+
 		xfree(dh);
 		xfree(dest);
 	} else {
 		dest = path_to_hldir(dest_path,false);
-		dest->type = htons(HTLC_DATA_DIR_RENAME); 
+		dest->type = htons(HTLC_DATA_DIR_RENAME);
 		h->len = h->len2 = htonl(2 + SIZEOF_HX_DATA_HDR *2+ ntohs(dest->len) + nlen);
 		h->hc = htons(2);
-		
+
 		UpdateTask(fHxTrans-1,5);
 		SendData( buf, 26);
 		UpdateTask(fHxTrans-1,6);
@@ -1713,7 +1715,7 @@ HotlineClient::SendFileMove(const char* filename,const char* path ,const char* d
 		SendData( dest,SIZEOF_HX_DATA_HDR + ntohs(dest->len) );
 		UpdateTask(fHxTrans-1,9);
 		RemoveTask(fHxTrans-1);
-		
+
 		xfree(dest);
 	}
 }
@@ -1783,7 +1785,7 @@ HotlineClient::ReceiveFileInfo()
 				::memcpy(&time,dh->data,ntohs(dh->len));
 				sec = ntohl(time.seconds);
 				timet = sec;
-				
+
 				if(ntohs(time.base_year) == 1970)
 				{
 					created=ctime(&timet);
@@ -1809,11 +1811,11 @@ HotlineClient::ReceiveFileInfo()
 					timet -= 2082844800U + 32400;
 					modified=ctime(&timet);
 				}
-				
+
 				break;
 	}
 	dh_end()
-	
+
 	BString info="";
 	info << "File name: ";
 	info << name;
@@ -1853,7 +1855,7 @@ HotlineClient::ReceiveFileInfo()
 /***********************************************************
  * Send get news articles.
  ***********************************************************/
-void 
+void
 HotlineClient::SendNewsGet(const char* category, uint16 thread,const char* mime)
 {
 	struct hx_hdr hdr;
@@ -1862,7 +1864,7 @@ HotlineClient::SendNewsGet(const char* category, uint16 thread,const char* mime)
 //	uint32 category_len = ::strlen(category);
 	uint32 task = fHxTrans;
 	int mime_len = ::strlen(mime);
-	
+
 	//AddTask("Getting a article ...",task);
 	AddTaskList(task,T_NEWS_DATA_TASK);
 	/******** hxhdr *******/
@@ -1879,15 +1881,15 @@ HotlineClient::SendNewsGet(const char* category, uint16 thread,const char* mime)
 	midhdr.type = htons(HTLS_DATA_NEWS_THREADID);
 	midhdr.unknown = htons(2);
 	midhdr.thread = htons(thread);
-	
+
 	NewsBottomHdr btmhdr;
 	btmhdr.type = htons(HTLS_DATA_NEWS_NEWSTYPE);
 	btmhdr.len = htons(mime_len);
-	
+
 	uint32 hlen = 2 + SIZEOF_HX_DATA_HDR + ntohs(dh->len) + 6+4+mime_len;
 	hdr.len = htonl(hlen);
 	hdr.len2 = htonl(hlen);
-	
+
 	UpdateTask(task,2);
 	SendData(&hdr,22);
 	UpdateTask(task,3);
@@ -1899,7 +1901,7 @@ HotlineClient::SendNewsGet(const char* category, uint16 thread,const char* mime)
 	UpdateTask(task,6);
 	SendData(mime, mime_len);
 	UpdateTask(task,7);
-	
+
 	//this->UpdateTask(task,7);
 	xfree(dh);
 }
@@ -1908,7 +1910,7 @@ HotlineClient::SendNewsGet(const char* category, uint16 thread,const char* mime)
 /***********************************************************
  * Receive news article
  ***********************************************************/
-void 
+void
 HotlineClient::ReceiveNews()
 {
 	uint32 sec = 0;
@@ -1983,7 +1985,7 @@ HotlineClient::ReceiveNews()
 /***********************************************************
  * Post news thread.
  ***********************************************************/
-void 
+void
 HotlineClient::SendNewsPostThread(const char* path, uint16 reply_thread, const char* name, uint16 parent_thread, const char* message, const char* mime)
 {
 	uint8 buf[22];
@@ -1996,7 +1998,7 @@ HotlineClient::SendNewsPostThread(const char* path, uint16 reply_thread, const c
 	struct hx_data_hdr *dh4 = (hx_data_hdr*)buf3;
 	struct hx_data_hdr *dh5;
 	struct hx_data_hdr *dh6;
-	// Path	
+	// Path
 	h->type = htonl(HTLC_HDR_POSTTHREAD);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
@@ -2014,7 +2016,7 @@ HotlineClient::SendNewsPostThread(const char* path, uint16 reply_thread, const c
 	// Parent Thread
 	dh4->type = htons(HTLS_DATA_NEWS_PARENTTHREAD);
 	dh4->len  = htons(2);
-	S16HTON(reply_thread,dh4->data);	
+	S16HTON(reply_thread,dh4->data);
 	// Mime
 	dh5 = (hx_data_hdr*)malloc(SIZEOF_HX_DATA_HDR+strlen(mime));
 	dh5->type = htons(HTLS_DATA_NEWS_NEWSTYPE);
@@ -2030,7 +2032,7 @@ HotlineClient::SendNewsPostThread(const char* path, uint16 reply_thread, const c
 
 	h->len = h->len2 = htonl( 2 + SIZEOF_HX_DATA_HDR*6 + ntohs(dh->len)+ ntohs(dh2->len) +
 		ntohs(dh3->len) + ntohs(dh4->len)+ntohs(dh5->len) + ntohs(dh6->len));
-	
+
 	SendData(  buf, 22);
 	SendData(dh,SIZEOF_HX_DATA_HDR + ntohs(dh->len) );
 	SendData(buf2,SIZEOF_HX_DATA_HDR + ntohs(dh2->len) );
@@ -2082,7 +2084,7 @@ HotlineClient::ReceivePostNews()
 	char *news_buf = NULL;
 	unsigned int news_len = 0;
 	struct hx_data_hdr *dh = (hx_data_hdr*)&fHxBuf[22];
-	
+
 	//dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 	if (ntohs(dh->type) == HTLS_DATA_NEWS) {
 		news_len = ntohs(dh->len);
@@ -2096,9 +2098,9 @@ HotlineClient::ReceivePostNews()
 	msg.AddString("text",news_buf);
 	((HApp*)be_app)->MainWindow()->PostMessage(&msg);
 	be_app->PostMessage(SOUND_POST_NEWS_SND);
-	delete[] news_buf;	
+	delete[] news_buf;
 	hx_reset();
-}	
+}
 
 
 /***********************************************************
@@ -2119,7 +2121,7 @@ HotlineClient::ReceiveTaskError()
 			((HApp*)be_app)->Prefs()->GetData("encoding",(int32*)&encoding);
 			if(encoding)
 				utils.ConvertToUTF8(&text,encoding-1);
-		
+
 			(new MAlert(_("Error"),text,_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
 			/*if( ::strcmp(text,"Incorrect login.") == 0)
 			{
@@ -2148,7 +2150,7 @@ HotlineClient::ReceiveUserChanged()
 	int16 user_nlen = 0;
 	char  nick[32];
 	uint32 pcref =0;
-	
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 	switch (ntohs(dh->type)) {
 			case HTLS_DATA_SOCKET:
@@ -2186,7 +2188,7 @@ void
 HotlineClient::ReceiveUserLeave()
 {
  	uint16 sock = 0;
-	
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 		switch (ntohs(dh->type)) {
 			case HTLS_DATA_SOCKET:
@@ -2208,7 +2210,7 @@ HotlineClient::ReceiveUserLeave()
 void
 HotlineClient::ReceiveFileList (void)
 {
-	
+
 	char *buf = NULL;
 	uint16 i, bpos;
 	uint32 fnlen, filesize;
@@ -2269,7 +2271,7 @@ HotlineClient::ReceiveFileList (void)
 			fnlen = ntohl(fh->fnlen);
 			bpos = 0;
 			uint32 modtime = ntohl(fh->modtime);
-			
+
 			buf = new char[fnlen+1];
 			::memcpy(buf,fh->fname,fnlen);
 			buf[fnlen] = '\0';
@@ -2287,10 +2289,10 @@ HotlineClient::ReceiveFileList (void)
 			msg.AddInt32("size",filesize);
 			msg.AddString("name",buf);
 			msg.AddInt32("modified",modtime);
-			
+
 			delete[] buf;
 		dh_end()
-		
+
 	}
 	//if( !msg.IsEmpty())
 	be_app->PostMessage(&msg);
@@ -2302,7 +2304,7 @@ HotlineClient::ReceiveFileList (void)
 /***********************************************************
  * Send delete file command.
  ***********************************************************/
-void 
+void
 HotlineClient::SendFileDelete(const char* path)
 {
 	char buf[SIZEOF_HX_HDR + SIZEOF_HX_DATA_HDR];
@@ -2322,19 +2324,19 @@ HotlineClient::SendFileDelete(const char* path)
 		dh = path_to_hldir(path, 1);
 		h->len = h->len2 = htonl(2 + (SIZEOF_HX_DATA_HDR * 2) + ntohs(dh->len) + nlen);
 		h->hc = htons(2);
-		
+
 		SendData( buf, 26);
 		SendData( p, nlen);
 		SendData( dh, SIZEOF_HX_DATA_HDR + ntohs(dh->len));
-		
+
 		xfree(dh);
 	} else {
 		h->len = h->len2 = htonl(2 + SIZEOF_HX_DATA_HDR + nlen);
 		h->hc = htons(1);
-		
+
 		SendData( buf, 26 );
 		SendData( p, nlen );
-		
+
 	}
 }
 
@@ -2352,7 +2354,7 @@ HotlineClient::ReceiveFileGet ()
 
 	uint32 task = ntohl(h->trans);
 	uint32 ref = 0, size = 0, queue = 0;
-	
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 		switch (ntohs(dh->type)) {
 			case HTLS_DATA_HTXF_SIZE:
@@ -2366,7 +2368,7 @@ HotlineClient::ReceiveFileGet ()
 				break;
 		}
 	dh_end()
-		
+
 	if(Lock())
 	{
 		int32 count = fFileTransArray.CountItems();
@@ -2400,7 +2402,7 @@ HotlineClient::ReceiveFileGet ()
 			}
 		}
 		Unlock();
-	}	
+	}
 	hx_reset();
 }
 
@@ -2416,7 +2418,7 @@ HotlineClient::ReceiveFilePut()
 	uint32 queue = 0;
 	struct hx_hdr *hdr = (hx_hdr*)fHxBuf;
 	uint32 task = ntohl(hdr->trans);
-	
+
 	dh_start( &(fHxBuf[SIZEOF_HX_HDR]),fHxPos - SIZEOF_HX_HDR)
 		switch(ntohs(dh->type))
 		{
@@ -2431,7 +2433,7 @@ HotlineClient::ReceiveFilePut()
 			L32NTOH(data_pos,&buf[46]);
 			break;
 		}
-		case HTLS_DATA_FILE_QUEUE: 
+		case HTLS_DATA_FILE_QUEUE:
 		{
 			dh_getint(queue);
 			break;
@@ -2447,7 +2449,7 @@ HotlineClient::ReceiveFilePut()
 		if(trans->task == task)
 		{
 			fFileTransArray.RemoveItem(i);
-		
+
 				//BMessage msg(B_REFS_RECEIVED);
 				BMessage msg(M_UPLOAD_TASK);
 				msg.AddInt32("task",(int32)task);
@@ -2482,27 +2484,27 @@ HotlineClient::ReceiveFilePut()
 /***********************************************************
  * Send get user list command.
  ***********************************************************/
-void 
+void
 HotlineClient::SendGetUsersList()
 {
 	char fBuffer[22];
 	hx_hdr *hdr;
-	
+
 	hdr = (hx_hdr *)fBuffer;
 	hdr->type = htonl(HTLC_HDR_USER_GETLIST);
-	
+
 	AddTask(_("Getting user list…"),fHxTrans);
 	AddTaskList(fHxTrans,T_USER_LIST_TASK);
-	
+
 	hdr->trans = htonl(fHxTrans++);
 	hdr->flag = 0;
 	hdr->len = hdr->len2 = htonl(2);
 	hdr->hc =htons(0);
 	//hdr->obj_count = htons(0);
-	
+
 	SendData(fBuffer, 22);
 	UpdateTask(fHxTrans-1,5);
-	
+
 	return;
 }
 
@@ -2515,9 +2517,9 @@ HotlineClient::ReceiveChatInvite (bool me)
 	uint32 sock = 0, pcref = 0;
 	char *nick = NULL;
 	uint16 nlen = 0;
-	
+
 	//uint32 trans = ntohl(h->trans);
-	
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 		switch (ntohs(dh->type)) {
 			case HTLS_DATA_SOCKET:
@@ -2629,7 +2631,7 @@ HotlineClient::ReceiveChatUserChange()
 				break;
 		}
 	dh_end()
-	
+
 	BMessage msg(H_CHAT_USER_CHANGE);
 	msg.AddInt32("pcref",(int32)pcref);
 	msg.AddInt16("sock",sock);
@@ -2716,7 +2718,7 @@ HotlineClient::SendChatLeave (uint32 pcref)
 	dh->type = htons(HTLC_DATA_CHAT_REF);
 	dh->len = htons(4);
 	S32HTON(pcref, dh->data);
-	
+
 	SendData(buf, 30);
 }
 
@@ -2743,7 +2745,7 @@ HotlineClient::SendChatInvite (uint32 pcref, uint32 sock)
 	dh->type = htons(HTLC_DATA_SOCKET);
 	dh->len = htons(4);
 	S32HTON(sock, dh->data);
-	
+
 	SendData(  buf, 38);
 }
 
@@ -2769,7 +2771,7 @@ HotlineClient::SendChatChat (uint32 pcref, const void *data, uint16 len)
 	dh->type = htons(HTLC_DATA_CHAT_REF);
 	dh->len = htons(4);
 	S32HTON(pcref, dh->data);
-	
+
 	SendData( buf, SIZEOF_HX_HDR + SIZEOF_HX_DATA_HDR);
 	SendData( data, len);
 	SendData( &(buf[SIZEOF_HX_HDR + SIZEOF_HX_DATA_HDR]), SIZEOF_HX_DATA_HDR + 4);
@@ -2784,7 +2786,7 @@ HotlineClient::ReceiveHeader(void)
 {
 	struct hx_hdr *h = (struct hx_hdr *)fHxBuf;
 	register uint32 type = ntohl(h->type), len = ntohl(h->len);
-#ifdef DEBUG	
+#ifdef DEBUG
 	uint32 trans = ntohl(h->trans);
 #endif
 	PRINT(("rcv_hdr: %ld  Trans: %ld\n",type,trans));
@@ -2882,7 +2884,7 @@ HotlineClient::SendFileGet (const char *path,const char* localpath, uint32 data_
 	AddTask(_("Downloading file…"),fHxTrans);
 	AddTaskList(fHxTrans,T_FILE_TRANS_TASK);
 	UpdateTask(fHxTrans,2);
-	
+
 	h->type = htonl(HTLC_HDR_FILE_GET);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
@@ -2894,19 +2896,19 @@ HotlineClient::SendFileGet (const char *path,const char* localpath, uint32 data_
 		dh = path_to_hldir(path, 1);
 		h->len = h->len2 = htonl(74 + 2 + (SIZEOF_HX_DATA_HDR * 3) + ntohs(dh->len) + nlen);
 		h->hc = htons(3);
-		
+
 		SendData( buf, 26);
 		UpdateTask(fHxTrans-1,3);
 		SendData( p, nlen);
 		UpdateTask(fHxTrans-1,5);
 		SendData( dh, SIZEOF_HX_DATA_HDR + ntohs(dh->len));
 		UpdateTask(fHxTrans-1,6);
-		
+
 		xfree(dh);
 	} else {
 		h->len = h->len2 = htonl(74 + 2 + (SIZEOF_HX_DATA_HDR * 2) + nlen);
 		h->hc = htons(2);
-		
+
 		SendData( buf, 26);
 		UpdateTask(fHxTrans-1,4);
 		SendData( p , nlen);
@@ -2923,7 +2925,7 @@ HotlineClient::SendFileGet (const char *path,const char* localpath, uint32 data_
 	74);
 	S32HTON(data_size, &buf[4 + 46]);
 	S32HTON(rsrc_size, &buf[4 + 62]);
-	
+
 	SendData( buf, 78);
 	UpdateTask(fHxTrans-1,8);
 }
@@ -2948,7 +2950,7 @@ HotlineClient::SendUserKick (uint32 sock)
 	dh->type = htons(HTLC_DATA_SOCKET);
 	dh->len = htons(4);
 	S32HTON(sock, dh->data);
-	
+
 	SendData(buf, 30);
 }
 
@@ -2962,7 +2964,7 @@ HotlineClient::SendUserGetInfo (uint32 sock)
 	uint8 buf[32];
 	struct hx_hdr *h = (struct hx_hdr *)buf;
 	struct hx_data_hdr *dh = (struct hx_data_hdr *)(&(buf[SIZEOF_HX_HDR]));
-	
+
 	h->type = htonl(HTLC_HDR_USER_GETINFO);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
@@ -2971,18 +2973,18 @@ HotlineClient::SendUserGetInfo (uint32 sock)
 	dh->type = htons(HTLC_DATA_SOCKET);
 	dh->len = htons(4);
 	S32HTON(sock, dh->data);
-	
+
 	AddTask(_("Getting user infomation…"),fHxTrans-1);
 	AddTaskList(fHxTrans-1,T_USER_INFO_TASK);
 	UpdateTask(fHxTrans-1,5);
-	
+
 	SendData(buf, 30);
 }
 
 /*
  * Send get news list.
- 
-void 
+
+void
 HotlineClient::SendNewsDirList(const char* path)
 {
 	uint8 buf[SIZEOF_HX_HDR];
@@ -3116,13 +3118,13 @@ HotlineClient::ReceiveUserList()
 	int16 user_nlen;
 	char  nick[64];
 	struct hx_userlist_hdr *uh;
-	
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 
-	switch (ntohs(dh->type)) 
+	switch (ntohs(dh->type))
 	{
 		case HTLS_DATA_USER_LIST:
-		
+
 		uh = (struct hx_userlist_hdr *)dh;
 		sock = (uint16)ntohs(uh->sock);
 		icon = (uint16)ntohs(uh->icon);
@@ -3130,9 +3132,9 @@ HotlineClient::ReceiveUserList()
 		user_nlen = (uint8)(ntohs(uh->nlen) > 31 ? 31 : ntohs(uh->nlen));
 		memcpy(nick, uh->nick, user_nlen);
 		nick[user_nlen] = '\0';
-		AddUserItem(sock,icon,colour,nick);	
+		AddUserItem(sock,icon,colour,nick);
 		break;
-	} 
+	}
 	dh_end()
 }
 
@@ -3152,10 +3154,10 @@ HotlineClient::ReceivePrvChatUserList()
 	uint32 trans = ntohl(h->trans);
 	struct hx_userlist_hdr *uh;
 	BMessage mes(H_PRV_CHAT_USER_ADD);
-	
+
 	int count = this->fPrvChatList.CountItems();
 	uint32 pcref = 0;
-				
+
 	for(register int32 k = 0;k< count;k++)
 	{
 		PrvChatTask *prvtask = (PrvChatTask*)this->fPrvChatList.ItemAt(k);
@@ -3167,15 +3169,15 @@ HotlineClient::ReceivePrvChatUserList()
 			break;
 		}
 	}
-	
-	
-	
+
+
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 
-	switch (ntohs(dh->type)) 
+	switch (ntohs(dh->type))
 	{
 		case HTLS_DATA_USER_LIST:
-		{	
+		{
 			uh = (struct hx_userlist_hdr *)dh;
 			sock = (uint16)ntohs(uh->sock);
 			icon = (uint16)ntohs(uh->icon);
@@ -3183,14 +3185,14 @@ HotlineClient::ReceivePrvChatUserList()
 			user_nlen = (uint8)(ntohs(uh->nlen) > 31 ? 31 : ntohs(uh->nlen));
 			memcpy(nick, uh->nick, user_nlen);
 			nick[user_nlen] = '\0';
-		
-			
+
+
 			mes.AddInt32("pcref",pcref);
 			mes.AddInt16("sock",sock);
 			mes.AddInt16("icon",icon);
 			mes.AddInt16("color",colour);
 			mes.AddString("nick",nick);
-				
+
 			break;
 		}
 		case HTLS_DATA_CHAT_SUBJECT:
@@ -3202,7 +3204,7 @@ HotlineClient::ReceivePrvChatUserList()
 			mes.AddString("topic",chat_subject);
 			break;
 		}
-	} 
+	}
 	dh_end()
 	be_app->PostMessage(&mes);
 	delete[] chat_subject;
@@ -3229,7 +3231,7 @@ HotlineClient::SendChatCreate (uint32 sock)
 	dh->type = htons(HTLC_DATA_SOCKET);
 	dh->len = htons(4);
 	S32HTON(sock, dh->data);
-	
+
 	SendData(buf, 30);
 }
 
@@ -3248,7 +3250,7 @@ HotlineClient::SendNewsGetFile (void)
 	h.flag = 0;
 	h.len = h.len2 = htonl(2);
 	h.hc = 0;
-	
+
 	SendData(&h, SIZEOF_HX_HDR);
 	UpdateTask(fHxTrans-1,4);
 }
@@ -3300,7 +3302,7 @@ HotlineClient::SendCategory()
 	bbuf.AppendString("TEST.hnz");
 	h->len = h->len2 = htonl(2 + 8 + 9);
 	h->hc = htons(1);
-	
+
 	//SendData( buf, SIZEOF_HX_HDR);
 	//SendData( bbuf);
 	//xfree(dh);
@@ -3329,7 +3331,7 @@ HotlineClient::SendMessage (uint32 sock, const void *data, uint16 len)
 	dh = (struct hx_data_hdr *)(&(buf[28]));
 	dh->type = htons(HTLC_DATA_MSG);
 	dh->len = htons(len);
-	
+
 	SendData(buf, 32);
 	SendData( data, len);
 }
@@ -3357,7 +3359,7 @@ HotlineClient::SendUserKickBan (uint32 sock)
 	dh->type = htons(HTLC_DATA_SOCKET);
 	dh->len = htons(4);
 	*((uint32 *)dh->data) = htonl(sock);
-	
+
 	SendData( buf, 36);
 }
 
@@ -3365,7 +3367,7 @@ HotlineClient::SendUserKickBan (uint32 sock)
 /***********************************************************
  * Send change user info.
  ***********************************************************/
-void 
+void
 HotlineClient::SendUserChange(const char* nick, uint16 icon)
 {
 	uint8 buf[32];
@@ -3383,9 +3385,9 @@ HotlineClient::SendUserChange(const char* nick, uint16 icon)
 	dh = (struct hx_data_hdr *)(&(buf[28]));
 	dh->type = htons(HTLC_DATA_NICK);
 	dh->len = htons(nlen);
-	
+
 	SendData(buf, 32 );
-	
+
 	BString bnick = nick;
 	TextUtils utils;
 	int32 encoding;
@@ -3403,7 +3405,7 @@ HotlineClient::SendSilverWingMode()
 {
 	uint8 buf[SIZEOF_HX_HDR];
 	struct hx_hdr *h = (struct hx_hdr *)buf;
-	
+
 	h->type = htonl(HTLC_HDR_SILVERWING_MODE);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
@@ -3498,7 +3500,7 @@ HotlineClient::RemoveUserItem(uint16 sock)
 {
 	BMessage msg(H_REMOVE_USER);
 	msg.AddInt16("sock",sock);
-	
+
 	((HWindow*)((HApp*)be_app)->MainWindow())->PostMessage(&msg);
 }
 
@@ -3638,7 +3640,7 @@ HotlineClient::SendFilePut (const char *remotepath,const char* localpath, uint32
 	AddTask(_("Uploading file…"),fHxTrans);
 	AddTaskList(fHxTrans,T_FILE_TRANS_TASK);
 	UpdateTask(fHxTrans,2);
-	
+
 	h->type = htonl(HTLC_HDR_FILE_PUT);
 	h->trans = htonl(fHxTrans++);
 	h->flag = 0;
@@ -3650,24 +3652,24 @@ HotlineClient::SendFilePut (const char *remotepath,const char* localpath, uint32
 		dh = path_to_hldir(remotepath, 1);
 		h->len = h->len2 = htonl(2 + 2 + (SIZEOF_HX_DATA_HDR * 3) + ntohs(dh->len) + nlen );
 		h->hc = htons(3);
-		
+
 		SendData(buf, 26);
 		UpdateTask(fHxTrans-1,4);
 		SendData( p, nlen);
 		UpdateTask(fHxTrans-1,6);
 		SendData( dh, SIZEOF_HX_DATA_HDR + ntohs(dh->len));
 		UpdateTask(fHxTrans-1,7);
-		
-		xfree(dh);	
+
+		xfree(dh);
 	} else {
 		h->len = h->len2 = htonl(2 + 2 + (SIZEOF_HX_DATA_HDR * 2) + nlen);
 		h->hc = htons(2);
-		
+
 		SendData( buf, 26);
 		UpdateTask(fHxTrans-1,5);
 		SendData( p, nlen);
 		UpdateTask(fHxTrans-1,7);
-		
+
 	}
 	dh = (struct hx_data_hdr *)buf;
 	dh->type = htons(HTLC_DATA_RESUMEFLAG);
@@ -3702,7 +3704,7 @@ HotlineClient::SendFileList (const char *path,uint32 index,bool use_task)
 	uint8 buf[SIZEOF_HX_HDR];
 	struct hx_hdr *h = (struct hx_hdr *)buf;
 	struct hx_data_hdr *dh;
-	
+
 	/********* Add file list index *********/
 	FileListIndex *file_index = new FileListIndex;
 	file_index->task = fHxTrans;
@@ -3717,7 +3719,7 @@ HotlineClient::SendFileList (const char *path,uint32 index,bool use_task)
 	if (!path || !path[0] || (path[0] == dir_char && !path[1])) {
 		h->len = h->len2 = htonl(2);
 		h->hc = htons(0);
-		
+
 		SendData(buf, SIZEOF_HX_HDR);
 		return;
 	}
@@ -3730,7 +3732,7 @@ HotlineClient::SendFileList (const char *path,uint32 index,bool use_task)
 	SendData(dh, SIZEOF_HX_DATA_HDR + ntohs(dh->len));
 	//if(use_task)
 	//	this->UpdateTask(fHxTrans-1,4);
-	
+
 	xfree(dh);
 }
 
@@ -3855,7 +3857,7 @@ rd_wr (BNetEndpoint *rd_fd, int wr_fd, uint32 data_len)
 /***********************************************************
  * beos path to hotline path ( for news).
  ***********************************************************/
-struct hx_data_hdr* 
+struct hx_data_hdr*
 HotlineClient::news_path_to_hldir(const char *path, int is_file)
 {
 	struct hx_data_hdr *dh;
@@ -3863,7 +3865,7 @@ HotlineClient::news_path_to_hldir(const char *path, int is_file)
 	register char const *p, *p2;
 	uint16 pos = 2, dc = 0;
 	register uint16 nlen;
-	
+
 	dh = (hx_data_hdr *)xmalloc(SIZEOF_HX_DATA_HDR + 2);
 	p = path;
 	while ((p2 = strchr(p, '/'))) {
@@ -3894,15 +3896,15 @@ HotlineClient::news_path_to_hldir(const char *path, int is_file)
 	dh->type = htons(HTLS_DATA_NEWS_NEWSPATH);
 	dh->len = htons(pos);
 	*((uint16 *)dh->data) = htons(dc);
-	
+
 	return dh;
 }
 
 
 /***********************************************************
- * Send get news category list. 
+ * Send get news category list.
  ***********************************************************/
-void 
+void
 HotlineClient::SendNewsDirList(const char* path,uint32 index)
 {
 	uint8 buf[SIZEOF_HX_HDR];
@@ -3911,7 +3913,7 @@ HotlineClient::SendNewsDirList(const char* path,uint32 index)
 
 	//AddTask("Getting news categories ...",fHxTrans);
 	AddTaskList(fHxTrans,T_NEWS_FOLDER_ITEM_TASK);
-	
+
 	if(Lock())
 	{
 		NewsTrans *trans = new NewsTrans;
@@ -3926,7 +3928,7 @@ HotlineClient::SendNewsDirList(const char* path,uint32 index)
 	if (!path || !path[0] || (path[0] == '/' && !path[1])) {
 		h->len = h->len2 = htonl(2);
 		h->hc = 0;
-		
+
 		SendData(buf, SIZEOF_HX_HDR);
 		UpdateTask(fHxTrans-1,6);
 		return;
@@ -3934,7 +3936,7 @@ HotlineClient::SendNewsDirList(const char* path,uint32 index)
 	dh = news_path_to_hldir(path, 0);
 	h->len = h->len2 = htonl(2 + SIZEOF_HX_DATA_HDR + ntohs(dh->len));
 	h->hc = htons(2);
-	
+
 	SendData(buf, SIZEOF_HX_HDR);
 	UpdateTask(fHxTrans-1,4);
 	SendData(dh, SIZEOF_HX_DATA_HDR + ntohs(dh->len));
@@ -3951,7 +3953,7 @@ void
 HotlineClient::AddPrvChat(uint32 pcref,uint32 task)
 {
 	BAutolock lock(this);
-	
+
 	PrvChatTask *prvtask = new PrvChatTask;
 	prvtask->pcref = pcref;
 	prvtask->trans = task;
@@ -3966,7 +3968,7 @@ HotlineClient::AddPrvChat(uint32 pcref,uint32 task)
 void
 HotlineClient::ReceiveUpdateQueue()
 {
-	PRINT(( "Receive update queue\n" ));	
+	PRINT(( "Receive update queue\n" ));
 	uint32 queue = 0,ref = 0;
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 		switch (ntohs(dh->type)) {
@@ -3980,7 +3982,7 @@ HotlineClient::ReceiveUpdateQueue()
 				PRINT(( "Type: 0x%x" , ntohs(dh->type) ));
 		}
 	dh_end()
-	
+
 	BMessage msg(M_RECEIVE_UPDATE_QUEUE);
 	msg.AddInt32("queue",queue);
 	msg.AddInt32("ref",ref);
@@ -4010,7 +4012,7 @@ HotlineClient::SendPrvChatTopicChange(const char* topic,uint32 pcref)
 	dh->type = htons(HTLC_DATA_CHAT_REF);
 	dh->len = htons(4);
 	S32HTON(pcref, dh->data);
-	
+
 	SendData( buf, SIZEOF_HX_HDR + SIZEOF_HX_DATA_HDR );
 	SendData( topic, len );
 	SendData( &(buf[SIZEOF_HX_HDR + SIZEOF_HX_DATA_HDR]), SIZEOF_HX_DATA_HDR + 4 );
@@ -4025,7 +4027,7 @@ HotlineClient::ReceivePrvChatTopicChanged()
 	char *topic = NULL;
 	uint32 pcref = 0;
 	uint16 len = 0;
-	
+
 	dh_start(&(fHxBuf[SIZEOF_HX_HDR]), fHxPos - SIZEOF_HX_HDR)
 		switch (ntohs(dh->type)) {
 			case HTLS_DATA_CHAT_REF:
@@ -4041,7 +4043,7 @@ HotlineClient::ReceivePrvChatTopicChanged()
 	dh_end()
 	if (!len)
 		goto ret;
-	
+
 	if (pcref)
 	{
 		BMessage msg(H_TOPIC_CHANGED);
@@ -4067,7 +4069,7 @@ HotlineClient::SendPing()
 	if(abs(timet - fIdleTime) >= 60*min)
 	{
 		fIdleTime = timet;
-		SendFileList("",0,false);	
+		SendFileList("",0,false);
 		PRINT(( "PING\n" ));
 	}
 }
@@ -4101,7 +4103,7 @@ HotlineClient::ReceiveData(void* data,size_t size,bigtime_t timeout)
 	{
 		if(!fEndpoint)
 			break;
-		if(fEndpoint->IsDataPending(timeout))	
+		if(fEndpoint->IsDataPending(timeout))
 		{
 			r = fEndpoint->Receive(data,size);
 			size -= r;
@@ -4119,7 +4121,7 @@ void
 HotlineClient::AddTaskList(uint32 task,TaskType type)
 {
 	BAutolock lock(this);
-	
+
 	HLTASK* hltask = new HLTASK;
 	hltask->task = task;
 	hltask->type = type;
@@ -4133,10 +4135,10 @@ HLTASK*
 HotlineClient::FindTaskList(uint32 task)
 {
 	BAutolock lock(this);
-	
+
 	register int32 count = fTaskList.CountItems();
 	HLTASK *result = NULL;
-	
+
 	while(count > 0)
 	{
 		HLTASK* hltask = static_cast<HLTASK*>(fTaskList.ItemAt(--count));
@@ -4159,7 +4161,7 @@ void
 HotlineClient::RemoveTaskList(HLTASK *hltask)
 {
 	BAutolock lock(this);
-	
+
 	fTaskList.RemoveItem(hltask);
 	delete hltask;
 }

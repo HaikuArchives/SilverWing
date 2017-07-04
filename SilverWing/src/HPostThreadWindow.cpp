@@ -4,7 +4,7 @@
 #include <Button.h>
 
 #include "HPostThreadWindow.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "CTextView.h"
 #include "HApp.h"
 #include "HPrefs.h"
@@ -21,7 +21,7 @@ HPostThreadWindow::HPostThreadWindow(BRect rect,const char* name,const char* cat
 	textcontrol->SetText(subject);
 	textcontrol->MakeFocus(true);
 	this->AddShortcut(B_RETURN,0,new BMessage(POST_MESSAGE));
-	this->AddShortcut(B_ESCAPE,0,new BMessage(B_QUIT_REQUESTED));	
+	this->AddShortcut(B_ESCAPE,0,new BMessage(B_QUIT_REQUESTED));
 }
 
 /***********************************************************
@@ -83,7 +83,7 @@ HPostThreadWindow::MessageReceived(BMessage *message)
 			((HApp*)be_app)->Prefs()->GetData("encoding",(int32*)&encoding);
 			if(!encoding)
 				utils.ConvertFromUTF8(&subject,encoding-1);
-			
+
 			char* message = new char[view->TextLength()+1];
 			::strcpy(message,view->Text());
 			if(encoding)

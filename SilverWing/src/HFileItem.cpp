@@ -1,3 +1,22 @@
+#define private public
+#include <santa/CLVEasyItem.h>
+#undef private
+enum
+{
+	CLVColNone =				0x00000000,
+	CLVColStaticText = 			0x00000001,
+	CLVColTruncateText =		0x00000002,
+	CLVColBitmap = 				0x00000003,
+	CLVColUserText = 			0x00000004,
+	CLVColTruncateUserText =	0x00000005,
+
+	CLVColTypesMask =			0x00000007,
+
+	CLVColFlagBitmapIsCopy =	0x00000008,
+	CLVColFlagNeedsTruncation =	0x00000010,
+	CLVColFlagRightJustify =	0x00000020
+};
+
 #include <string>
 #include <iostream>
 #include <ClassInfo.h>
@@ -8,10 +27,10 @@
 #include "HFileItem.h"
 #include "HApp.h"
 #include "HPrefs.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "TextUtils.h"
 //#include "Paper.h"
-#include "PrefilledBitmap.h"
+#include <santa/PrefilledBitmap.h>
 #include "folder.h"
 #include "unknown.h"
 #include "text.h"
@@ -77,7 +96,7 @@ HFileItem::HFileItem(const char* name,
 		bitmap = new PrefilledBitmap(BRect(0,0,15,15),B_COLOR_8_BIT,kUnknownBits);
 	/***************************************************/
 	if( fIsFolder)
-	{	
+	{
 		size_str << "( " << size << " items" << " )";
 		this->fSize = 0;
 	}else{
@@ -95,13 +114,13 @@ HFileItem::HFileItem(const char* name,
 			d = d/1024.0;
 			d = d/1024.0;
 			::sprintf(text,"%8.2fMB",d);
-		} 
+		}
 		size_str = text;
 		delete [] text;
 	}
 	char *tmpname = new char[strlen(name)+1];
 	::memset(tmpname,0,strlen(name)+1);
-	
+
 	fName = name;
 	::strcpy(tmpname,name);
 	int32 encoding;
@@ -123,12 +142,12 @@ HFileItem::HFileItem(const char* name,
 		}else{
 			char *mod = new char[64];
 			char tmp[64];
-			
+
 			struct tm* time = localtime((time_t*)&modified);
 			strftime(tmp, 64,"%m/%d/%y", time);
-			
+
 			sprintf(mod,"%s %.2d:%.2d:%.2d",tmp,time->tm_hour,time->tm_min, time->tm_sec);
-		
+
 			this->SetColumnContent(4,mod);
 			delete[] mod;
 		}
@@ -165,7 +184,7 @@ HFileItem::Bitmap()
 /***********************************************************
  * Sort function.
  ***********************************************************/
-int 
+int
 HFileItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item2, int32 KeyColumn)
 {
 	int result;
@@ -174,7 +193,7 @@ HFileItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item2, 
 	if(Item1 == NULL || Item2 == NULL || Item1->m_column_types.CountItems() <= KeyColumn ||
 		Item2->m_column_types.CountItems() <= KeyColumn)
 		return 0;
-	
+
 	int32 type1 = ((int32)Item1->m_column_types.ItemAt(KeyColumn)) & CLVColTypesMask;
 	int32 type2 = ((int32)Item2->m_column_types.ItemAt(KeyColumn)) & CLVColTypesMask;
 
@@ -195,7 +214,7 @@ HFileItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item2, 
 		text2 = (const char*)Item2->m_column_content.ItemAt(KeyColumn);
 	else if(type2 == CLVColTruncateUserText || type2 == CLVColUserText)
 		text2 = Item2->GetUserText(KeyColumn,-1);
-	
+
 	/******** In size column *******/
 	if( KeyColumn == 3 )
 	{
@@ -208,7 +227,7 @@ HFileItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item2, 
 	}else if(KeyColumn == 4){
 		int32 time1 = ((HFileItem*)Item1)->Time();
 		int32 time2 = ((HFileItem*)Item2)->Time();
-		
+
 		if(time1 == time2)
 			result = 0;
 		else
@@ -216,12 +235,12 @@ HFileItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item2, 
 	}else{
 		result = strcasecmp(text1,text2);
 	}
-	
+
 	return result;
 }
 
 /***********************************************************
- * Draw item 
+ * Draw item
  ***********************************************************/
 void
 HFileItem::DrawItemColumn(BView* owner, BRect item_column_rect, int32 column_index, bool complete)
@@ -229,14 +248,14 @@ HFileItem::DrawItemColumn(BView* owner, BRect item_column_rect, int32 column_ind
 	CLVEasyItem::DrawItemColumn(owner,item_column_rect,column_index,complete);
 	// Stroke line
 	rgb_color old_col = owner->HighColor();
-	
+
 	owner->SetHighColor(kBorderColor);
-	
+
 	BPoint start,end;
 	start.y = end.y = item_column_rect.bottom;
 	start.x = 0;
 	end.x = owner->Bounds().right;
-	
+
 	owner->StrokeLine(start,end);
 	owner->SetHighColor(old_col);
-}	
+}

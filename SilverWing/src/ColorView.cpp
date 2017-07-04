@@ -5,7 +5,7 @@
 #include "HOtherColor.h"
 #include "HWindow.h"
 #include "RectUtils.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 
 /***********************************************************
  * Constructor.
@@ -25,7 +25,7 @@ ColorView::ColorView(const char *name,BRect rect,rgb_color color,BHandler *targe
  ***********************************************************/
 ColorView::~ColorView()
 {
-	
+
 }
 
 /***********************************************************
@@ -82,7 +82,7 @@ ColorView::MessageReceived(BMessage *msg)
 			this->SetColor(color);
 			break;
 		}
-		
+
 		default:
 			BView::MessageReceived(msg);
 	}

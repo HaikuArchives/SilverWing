@@ -1,7 +1,7 @@
 #ifndef __HARTICLELIST_H__
 #define __HARTICLELIST_H__
 
-#include "ColumnListView.h"
+#include <santa/ColumnListView.h>
 #include <String.h>
 
 class HArticleItem;
@@ -24,7 +24,7 @@ virtual void	MessageReceived(BMessage *message);
 virtual void 	SelectionChanged();
 virtual void 	MouseDown(BPoint point);
 		void	StartBarberPole();
-private:	
+private:
 		BString fCategory;
 		BList	fPointerList;
 };

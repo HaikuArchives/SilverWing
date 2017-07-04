@@ -5,8 +5,8 @@
 #include "HFileWindow.h"
 #include "RectUtils.h"
 #include "HFileItem.h"
-#include "BetterScrollView.h"
-#include "Colors.h"
+#include <santa/BetterScrollView.h>
+#include <santa/Colors.h>
 #include "TextUtils.h"
 #include "HApp.h"
 #include "HToolbar.h"
@@ -62,7 +62,7 @@ HFileWindow::InitGUI(bool IsSilverWing)
 	ResourceUtils utils;
 	HToolbar *toolbox = new HToolbar(toolrect,B_FOLLOW_LEFT_RIGHT|B_FOLLOW_TOP);
 	//toolbox->AddButton("parentbtn",utils.GetBitmapResource('BBMP',"BMP:PARENT"),new BMessage(FILE_PARENT_FOLDER_MSG),"Parent Folder");
-	toolbox->AddButton("folderbtn",utils.GetBitmapResource('BBMP',"BMP:FOLDER"),new BMessage(FILE_MAKE_FOLDER),_("Make folder"));	
+	toolbox->AddButton("folderbtn",utils.GetBitmapResource('BBMP',"BMP:FOLDER"),new BMessage(FILE_MAKE_FOLDER),_("Make folder"));
 	toolbox->AddSpace();
 	toolbox->AddButton("uploadbtn",utils.GetBitmapResource('BBMP',"BMP:UPLOAD"),new BMessage(FILE_PUT_FILE_MSG),_("Upload files"));
 	toolbox->AddButton("downloadbtn",utils.GetBitmapResource('BBMP',"BMP:DOWNLOAD"),new BMessage(FILE_ITEM_CLICK_MSG),_("Download files"));
@@ -72,7 +72,7 @@ HFileWindow::InitGUI(bool IsSilverWing)
 	toolbox->AddSpace();
 	toolbox->AddButton("trashbtn",utils.GetBitmapResource('BBMP',"BMP:TRASH"),new BMessage(FILE_DELETE_FILE),_("Delete"));
 	this->AddChild(toolbox);
-//******* ListView ***********************/		
+//******* ListView ***********************/
 	BRect textrect = Bounds();
 	textrect.top += 30;
 	textrect.right -= B_V_SCROLL_BAR_WIDTH;
@@ -83,11 +83,11 @@ HFileWindow::InitGUI(bool IsSilverWing)
 
 	fListView->SetInvocationMessage(new BMessage(FILE_ITEM_CLICK_MSG));
 	this->AddChild(scroller);
-	
+
 	const int32 CAPTION_WIDTH = 90;
 	scroller->ScrollBar(B_HORIZONTAL)->ResizeBy(-CAPTION_WIDTH,0);
 	scroller->ScrollBar(B_HORIZONTAL)->MoveBy(CAPTION_WIDTH,0);
-	
+
 /********** Caption ***********/
 	BRect captionframe = scroller->Bounds();
 	captionframe.top = captionframe.bottom - B_H_SCROLL_BAR_HEIGHT;
@@ -146,7 +146,7 @@ HFileWindow::MessageReceived(BMessage *message)
 		{
 			int32 count;
 			type_code type;
-		
+
 			//fListView->RemoveAll();
 			message->GetInfo("name",&type,&count);
 			uint32 index;
@@ -160,7 +160,7 @@ HFileWindow::MessageReceived(BMessage *message)
 					fListView->RemoveChildItems(item);
 			}
 			for(register int32 i = 0;i < count;i++)
-			{	
+			{
 				const char* name = message->FindString("name",i);
 				const char* dtype = message->FindString("type",i);
 				const char* creator = message->FindString("creator",i);
@@ -213,7 +213,7 @@ HFileWindow::MessageReceived(BMessage *message)
 					BString alert_title = _("Filename:");
 					alert_title += " ";
 					alert_title<< item->DecodedName();
-					
+
 					int32 btn = (new MAlert(_("Would you like to download it?"),alert_title.String(),_("Cancel"),_("OK")))->Go();
 					if(btn == 1)
 					{
@@ -236,7 +236,7 @@ HFileWindow::MessageReceived(BMessage *message)
 					else
 						fListView->Expand(item);
 				}
-			}	
+			}
 		}
 		break;
 	}
@@ -273,7 +273,7 @@ HFileWindow::MessageReceived(BMessage *message)
 		be_app->PostMessage(&msg);
 		StartBarberPole(true);
 		break;
-	}	
+	}
 	case FILE_INFO_MESSAGE:
 	{
 		int32 sel = fListView->CurrentSelection();
@@ -304,9 +304,9 @@ HFileWindow::MessageReceived(BMessage *message)
 		message->FindPointer("pointer",&pointer);
 		HToolbarButton *btn = static_cast<HToolbarButton*>(pointer);
 		if(::strcmp(name,"uploadbtn") == 0 || ::strcmp(name,"folderbtn") == 0)
-		{	
+		{
 			if(sel <0)
-			{		
+			{
 				btn->SetEnabled(true);
 				break;
 			}else{
@@ -319,7 +319,7 @@ HFileWindow::MessageReceived(BMessage *message)
 		}else if(::strcmp(name,"downloadbtn") == 0 ||
 			::strcmp(name,"infobtn") == 0){
 			if(sel <0)
-			{		
+			{
 				btn->SetEnabled(false);
 				break;
 			}else{
@@ -356,7 +356,7 @@ HFileWindow::MessageReceived(BMessage *message)
 			BString tmppath = "";
 			char *tmp = new char[strlen(path.Leaf())+1];
 			strcpy(tmp,path.Leaf());
-			
+
 			int32 encoding;
 			((HApp*)be_app)->Prefs()->GetData("encoding",(int32*)&encoding);
 			if(encoding)
@@ -376,12 +376,12 @@ HFileWindow::MessageReceived(BMessage *message)
 				fListView->GetItemPath(parent,remotepath);
 			}
 			resume = fListView->FindSameItem(path.Leaf(),parent);
-			
+
 			if(remotepath.Length() > 0)
 				remotepath << dir_char;
 			remotepath << path.Leaf();
 			PRINT(("RemotePath:%s\n", remotepath.String() ));
-		
+
 			SendUpload(remotepath.String(),localpath.String(),resume);
 			}
 		}else{ // file move.
@@ -391,7 +391,7 @@ HFileWindow::MessageReceived(BMessage *message)
 			message->FindPoint("_drop_point_",&drop_point);
 			message->FindInt32("dragged_item",&dragged_item_index);
 			fListView->ConvertFromScreen(&drop_point);
-			
+
 			HFileItem *dest = fListView->FindItem(drop_point);
 			HFileItem *item = fListView->FindItem(dragged_item_index);
 			if(item != NULL)
@@ -433,11 +433,11 @@ HFileWindow::MessageReceived(BMessage *message)
 				if(item == NULL)
 					break;
 				BString path;
-				
+
 				fListView->GetItemPath(item,path);
 				BMessage msg(H_FILE_DELETE);
 				msg.AddString("path",path.String());
-				((HApp*)be_app)->Client()->PostMessage(&msg);		
+				((HApp*)be_app)->Client()->PostMessage(&msg);
 			}
 		}
 		break;
@@ -454,24 +454,24 @@ HFileWindow::MessageReceived(BMessage *message)
 	}
 	case B_REFS_RECEIVED:
 	{
-		entry_ref ref; 
-    	int32 count; 
-    	type_code type; 
-   	
-    	message->GetInfo( "refs", &type, &count ); 
+		entry_ref ref;
+    	int32 count;
+    	type_code type;
+
+    	message->GetInfo( "refs", &type, &count );
   	 	if ( type != B_REF_TYPE )
     	{
     		beep();
-        	return; 
+        	return;
   	   	}
-		message->FindRef( "refs", &ref ); 
+		message->FindRef( "refs", &ref );
 		BEntry entry(&ref);
 		BPath path(&entry);
      	//BString remotepath = fPath;
      	BString remotepath;
      	int32 sel = fListView->CurrentSelection();
      	HFileItem *parent = NULL;
-     	
+
      	if(sel < 0)
      		remotepath = "";
      	else{
@@ -516,9 +516,9 @@ HFileWindow::MessageReceived(BMessage *message)
 					if( item->isFolder() == false)
 					{
 						BString name = item->Name();
-	
+
 						path.Append(name.String());
-	
+
 						BString remotepath;/* = this->fPath;
 						if(remotepath.Length() > 0)
 							remotepath << dir_char;
@@ -529,7 +529,7 @@ HFileWindow::MessageReceived(BMessage *message)
 						this->SendDownload(remotepath.String(),path.Path());
 						path.GetParent(&path);
 						break;
-					} 
+					}
 				}
 			}
 		}// end if
@@ -562,7 +562,7 @@ HFileWindow::SendUpload(const char* remotepath,const char* localpath,bool is_res
 {
 	BString rPath(remotepath);
 	int index = rPath.FindLast(dir_char,rPath.Length()-2);
-	
+
 	BString str;
 	if(index != B_ERROR)
 	{
@@ -572,9 +572,9 @@ HFileWindow::SendUpload(const char* remotepath,const char* localpath,bool is_res
 		str = rPath;
 		rPath = "";
 	}
-	
+
 	TextUtils utils;
-		
+
 	char *tmp = new char[ str.Length() +1];
 	::strcpy(tmp,str.String());
 	int32 encoding;
@@ -582,7 +582,7 @@ HFileWindow::SendUpload(const char* remotepath,const char* localpath,bool is_res
 	if(encoding)
 		utils.ConvertFromUTF8(&tmp,encoding-1);
 	rPath << tmp;
-	
+
 	delete[] tmp;
 
 	uint16 resume = 0;
@@ -626,12 +626,12 @@ HFileWindow::GetSubItems(HFileItem *item)
 	uint32 index = item->ItemIndex();
 	fListView->GetItemPath(item,path);
 	PRINT(("ItemPath:%s\n", path.String() ));
-	
+
 	BMessage msg(FILE_FILE_REQUEST);
 	msg.AddString("path",path.String());
 	msg.AddInt32("index",index);
-	be_app->PostMessage(&msg);	
-	StartBarberPole(true);			
+	be_app->PostMessage(&msg);
+	StartBarberPole(true);
 }
 
 /***********************************************************
@@ -659,5 +659,5 @@ HFileWindow::StartBarberPole(bool start)
 	if(start)
 		caption->StartBarberPole();
 	else
-		caption->StopBarberPole();	
+		caption->StopBarberPole();
 }

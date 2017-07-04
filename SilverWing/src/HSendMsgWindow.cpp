@@ -1,6 +1,6 @@
 #include "HSendMsgWindow.h"
 #include "RectUtils.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "TextUtils.h"
 #include "HApp.h"
 #include "HPrefs.h"
@@ -26,9 +26,9 @@ HSendMsgWindow::HSendMsgWindow(BRect rect,const char *name,uint32 sock)
 	fSock = sock;
 	this->AddShortcut(B_RETURN,0,new BMessage(SENDMSG_SEND_MSG));
 	this->AddShortcut(B_ESCAPE,0,new BMessage(B_QUIT_REQUESTED));
-	this->AddShortcut('W',0,new BMessage(B_QUIT_REQUESTED));		
+	this->AddShortcut('W',0,new BMessage(B_QUIT_REQUESTED));
 	this->AddShortcut('M',0,new BMessage(MESSAGE_CHAT_MSG));
-	
+
 	float min_width,min_height,max_width,max_height;
 	GetSizeLimits(&min_width,&max_width,&min_height,&max_height);
 	min_width = 300;
@@ -71,12 +71,12 @@ HSendMsgWindow::InitGUI()
 	stringView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	stringView->SetLowColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	this->AddChild(stringView);
-	
+
 	rect.left += 5;
 	rect.right -= 5+B_V_SCROLL_BAR_WIDTH;
 	rect.top  = bitmapRect.bottom + 5;
 	rect.bottom -= 50;
-	
+
 	textview = new CTextView(rect,"textview",B_FOLLOW_ALL,B_WILL_DRAW|B_NAVIGABLE);
 	textview->MakeEditable(true);
 	textview->SetWordWrap(true);
@@ -95,7 +95,7 @@ HSendMsgWindow::InitGUI()
 	btn = new BButton(rect,"ok",_("Close"),new BMessage(B_QUIT_REQUESTED),B_FOLLOW_BOTTOM|B_FOLLOW_RIGHT);
 	//fToolTip->SetText(btn, "Close window. [ALT+W]");
 	bg->AddChild(btn);
-	
+
 	rect.left = Bounds().left + 5;
 	rect.right = rect.left + 80;
 	btn = new BButton(rect,"chat",_("Message chat"),new BMessage(MESSAGE_CHAT_MSG),B_FOLLOW_BOTTOM|B_FOLLOW_RIGHT);
@@ -139,7 +139,7 @@ HSendMsgWindow::MessageReceived(BMessage *message)
 	{
 		message->AddInt32("sock",fSock);
 		be_app->PostMessage(message);
-		this->PostMessage(B_QUIT_REQUESTED);	
+		this->PostMessage(B_QUIT_REQUESTED);
 		break;
 	}
 	default:

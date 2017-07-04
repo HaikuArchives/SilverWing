@@ -1,5 +1,5 @@
 #include "HDialog.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "TextUtils.h"
 #include "HApp.h"
 #include "HPrefs.h"
@@ -52,10 +52,10 @@ HDialog::InitGUI(const char* textlabel,const char* buttonlabel)
 	rect.left += 5;
 	rect.right -= 5;
 	rect.bottom = rect.top + 15;
-	
+
 	BTextControl *control = new BTextControl(rect,"text",textlabel,"",NULL);
 	control->SetDivider(bg->StringWidth(textlabel) + 2);
-	bg->AddChild(control);	
+	bg->AddChild(control);
 	rect.top = rect.bottom + 15;
 	rect.left = rect.right - 80;
 	rect.bottom = rect.top + 20;
@@ -90,7 +90,7 @@ HDialog::MessageReceived(BMessage *message)
 			this->PostMessage(B_QUIT_REQUESTED);
 		}
 		break;
-	}	
+	}
 	default:
 		BWindow::MessageReceived(message);
 	}

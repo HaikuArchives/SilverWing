@@ -1,7 +1,7 @@
 #include <Window.h>
 #include "HApp.h"
 #include "MLTextControl.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "HUserList.h"
 #include "HUserItem.h"
 #include <iostream>
@@ -36,7 +36,7 @@ MLTextControl::KeyDown(const char* bytes,int32 numBytes)
 {
 	int32 modifier = 0;
 	Window()->CurrentMessage()->FindInt32("modifiers",&modifier);
-	
+
 	if(bytes[0] == B_RETURN && modifier != 257)
 	{
 		if(strlen(Text()) > 0)
@@ -52,7 +52,7 @@ MLTextControl::KeyDown(const char* bytes,int32 numBytes)
 			fCash = Text();
 			fCashed = true;
 		}
-		
+
 		const char* str = HistoryAt(fHistoryIndex-1);
 		if(str)
 		{
@@ -100,7 +100,7 @@ MLTextControl::KeyDown(const char* bytes,int32 numBytes)
 		fCash = "";
 		CTextView::KeyDown(bytes,numBytes);
 	}
-}	
+}
 
 /***********************************************************
  * Draw
@@ -113,7 +113,7 @@ MLTextControl::Draw(BRect updateRect)
 
 /***********************************************************
  * Accept Drop
- ***********************************************************/ 
+ ***********************************************************/
 bool
 MLTextControl::AcceptsDrop(const BMessage *message)
 {
@@ -134,7 +134,7 @@ MLTextControl::MessageReceived(BMessage *message)
 	if(message->WasDropped() && message->FindString("nick",&nick) == B_OK)
 	{
 		this->WhenDropped(message);
-	}else	
+	}else
 		CTextView::MessageReceived(message);
 }
 
@@ -148,10 +148,10 @@ MLTextControl::WhenDropped(const BMessage *message)
 	BPoint point;
 	if(message->FindString("nick",&nick) == B_OK)
 	{
-		message->FindPoint("_drop_point_", &point); 
+		message->FindPoint("_drop_point_", &point);
 		this->ConvertFromScreen(&point);
-	
-		const int32 offset = this->OffsetAt(point);	
+
+		const int32 offset = this->OffsetAt(point);
 		this->Insert(offset,nick,strlen(nick));
 		// this->Select(offset, offset + strlen(nick));
 	}
@@ -208,10 +208,10 @@ MLTextControl::FindNick(const char* nick)
 	BListView *listview = cast_as(Window()->FindView("userlist"),BListView);
 	if(!listview)
 		return NULL;
-	
+
 	HUserItem **items = (HUserItem**)listview->Items();
 	int32 count = listview->CountItems();
-		
+
 	for(register int32 i = 0;i < count;i++)
 	{
 		BString str = items[i]->Nick();
@@ -224,6 +224,6 @@ MLTextControl::FindNick(const char* nick)
 			break;
 		}
 	}
-	
+
 	return found ? items[index]->Nick():NULL;
 }

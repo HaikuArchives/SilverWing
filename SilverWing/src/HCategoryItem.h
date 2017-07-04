@@ -1,7 +1,7 @@
 #ifndef __HCATEGORYITEM_H__
 #define __HCATEGORYITEM_H__
 
-#include "CLVEasyItem.h"
+#include <santa/CLVEasyItem.h>
 #include <String.h>
 #include <iostream>
 

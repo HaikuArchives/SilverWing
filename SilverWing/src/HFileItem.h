@@ -5,7 +5,7 @@
 
 #include "HTaskWindow.h"
 #include "hx_types.h"
-#include "CLVEasyItem.h"
+#include <santa/CLVEasyItem.h>
 
 class HFileItem :public CLVEasyItem {
 public:
@@ -35,4 +35,4 @@ private:
 			uint32  fItemIndex;
 			int32	fTime;
 };
-#endif 
+#endif

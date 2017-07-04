@@ -6,10 +6,12 @@
 #include "HApp.h"
 #include "HotlineClient.h"
 #include "HUserItem.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "HPrefs.h"
 #include <stdlib.h>
 #include <Debug.h>
+
+const rgb_color GrayRed = {255,150,150, 255};
 
 /***********************************************************
  * Constructor.
@@ -45,14 +47,14 @@ HUserItem::DrawItem(BView *owner, BRect frame, bool complete)
 	rgb_color color;
 	const rgb_color selectcolor = {184,194, 255,180};
 	bool selected = IsSelected();
-	
+
 	owner->SetDrawingMode(B_OP_COPY);
-	//if (complete) 
+	//if (complete)
 	//{
 		color = owner->ViewColor();
 		owner->SetHighColor(color);
 		owner->FillRect(frame);
-	//}	
+	//}
 	BFont newfont = be_bold_font;
 	newfont.SetSize(12);
 	BFont oldfont;
@@ -64,12 +66,12 @@ HUserItem::DrawItem(BView *owner, BRect frame, bool complete)
 	// Normal User
 	case 0: // normal
 		color = Black;
-		break;	
+		break;
 	// Away normal user
 	case 1: // normal
 		color = BeShadow;
 		break;
-	// admin 
+	// admin
 	case 2: // normal
 		color = Red;
 		break;
@@ -81,13 +83,13 @@ HUserItem::DrawItem(BView *owner, BRect frame, bool complete)
 		color = Black;
 	}
 	drawing_mode mode = owner->DrawingMode();
-	
+
 	if(fBitmap != NULL)
 	{
 		if(!fBad)
 		owner->SetDrawingMode(B_OP_ALPHA);
 
-		owner->DrawBitmap(fBitmap,BPoint(frame.left,frame.top) );	
+		owner->DrawBitmap(fBitmap,BPoint(frame.left,frame.top) );
 	}
 	if(fBad)
 		owner->SetDrawingMode(B_OP_ALPHA);
@@ -99,7 +101,7 @@ HUserItem::DrawItem(BView *owner, BRect frame, bool complete)
 	if(fNick)
 		owner->DrawString(fNick);
 	owner->SetFont(&oldfont);
-	
+
 	if(selected){
 		owner->SetHighColor(selectcolor);
 		owner->FillRect(frame);
@@ -144,7 +146,7 @@ HUserItem::ChangeUser(uint16 sock ,uint16 icon,uint16 color,const char* nick)
 		delete[] fNick;
 		fNick = NULL;
 	}
-		
+
 	if(fIcon != icon)
 		this->LoadUserBitmap(icon);
 	fIcon = icon;
@@ -159,13 +161,13 @@ const char*
 HUserItem::Nick() const
 {
 	return fNick;
-}	
+}
 
 /***********************************************************
  * Update
  *		Set item height
  ***********************************************************/
-void	
+void
 HUserItem::Update(BView *list ,const BFont *font)
 {
 	SetHeight(17.0);

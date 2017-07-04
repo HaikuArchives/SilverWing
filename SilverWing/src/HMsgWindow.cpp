@@ -1,6 +1,6 @@
 #include "HMsgWindow.h"
 #include "RectUtils.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "HSendMsgWindow.h"
 #include "TextUtils.h"
 #include "HApp.h"
@@ -33,10 +33,10 @@ HMsgWindow::HMsgWindow(BRect rect
 	SetTitle(title.String());
 	InitGUI(text,nick,icon);
 	this->AddShortcut(B_ESCAPE,0,new BMessage(B_QUIT_REQUESTED));
-	this->AddShortcut('W',0,new BMessage(B_QUIT_REQUESTED));	
-	this->AddShortcut('R',0,new BMessage(MESSAGE_REPLY_MSG));	
+	this->AddShortcut('W',0,new BMessage(B_QUIT_REQUESTED));
+	this->AddShortcut('R',0,new BMessage(MESSAGE_REPLY_MSG));
 	this->AddShortcut(B_RETURN,0,new BMessage(MESSAGE_REPLY_MSG));
-	this->AddShortcut('/',0,new BMessage(B_ZOOM));	
+	this->AddShortcut('/',0,new BMessage(B_ZOOM));
 	this->AddShortcut('M',0,new BMessage(MESSAGE_CHAT_MSG));
 	float min_width,min_height,max_width,max_height;
 	GetSizeLimits(&min_width,&max_width,&min_height,&max_height);
@@ -104,7 +104,7 @@ HMsgWindow::InitGUI(const char* text
 	rect.right -= 5+B_V_SCROLL_BAR_WIDTH;
 	rect.top += 25;//fMovieView->Bounds().Height()+10;//(fMovieView == NULL)?5:fMovieView->Bounds().Height()+5;
 	rect.bottom = Bounds().bottom - 50;
-	
+
 	textview = new URLTextView(rect,"textview",B_FOLLOW_ALL,B_WILL_DRAW|B_NAVIGABLE);
 	textview->MakeEditable(false);
 	textview->SetWordWrap(true);
@@ -126,7 +126,7 @@ HMsgWindow::InitGUI(const char* text
 	rect.right = rect.left + 80;
 	btn = new BButton(rect,"chat",_("Message chat"),new BMessage(MESSAGE_CHAT_MSG),B_FOLLOW_BOTTOM|B_FOLLOW_RIGHT);
 	bg->AddChild(btn);
-	
+
 	InsertMessage(text);
 	rect.OffsetBy(0,20);
 	rect.left = Bounds().left + 5;
@@ -157,8 +157,8 @@ HMsgWindow::MessageReceived(BMessage *message)
 			message->AddInt32("sock",fSock);
 			message->AddString("text",textview->Text());
 			be_app->PostMessage(message);
-			
-			this->PostMessage(B_QUIT_REQUESTED);	
+
+			this->PostMessage(B_QUIT_REQUESTED);
 			break;
 		}
 	default:

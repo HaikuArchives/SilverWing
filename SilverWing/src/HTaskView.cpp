@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <Debug.h>
 #include <Beep.h>
+#include <arpa/inet.h>
 
 #include "TextUtils.h"
 #include "MAlert.h"
@@ -16,7 +17,7 @@
 #include "hl_magic.h"
 #include "dhargs.h"
 #include "HTaskWindow.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "HPrefs.h"
 
 #define SLEEP_TIME 100
@@ -35,7 +36,7 @@ HTaskView::HTaskView(BRect rect, const char* label,uint32 task,uint32 type)
 	SetBarHeight(12);
 	SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	SetMaxValue(10);
-	
+
 	((HApp*)be_app)->Prefs()->GetData("encoding",(int32*)&fEncoding);
 }
 
@@ -184,7 +185,7 @@ HTaskView::DownloadThread(void* data)
 {
 	HTaskView* trans = (HTaskView*)data;
 	bigtime_t timeout = 120*1000000;
-	
+
 	uint32 data_len = trans->fSize;
 	BFile file;
 	register int r;
@@ -206,12 +207,12 @@ HTaskView::DownloadThread(void* data)
 	char buf[16384 + 16];
 //******* SOCKS5 valiables ***********//
 	bool useSock5;
-	
+
 //*********************************//
 	trans->fCancel = false;
 	trailingMessage.AddString("text","Connecting...");
 	trans->Window()->PostMessage(&trailingMessage,trans);
-	
+
 	((HApp*)be_app)->Prefs()->GetData("sock5",&useSock5);
 	if(endpoint.InitCheck()!= B_OK)
 	{
@@ -238,18 +239,18 @@ HTaskView::DownloadThread(void* data)
 	xfh.magic = htonl(HTXF_MAGIC_INT);
 	xfh.len = xfh.type = 0;
 	xfh.ref = htonl(trans->fRef);
-	
+
 	trailingMessage.ReplaceString("text",_("Sending commands…"));
 	trans->Window()->PostMessage(&trailingMessage,trans);
-	
+
 	if(endpoint.Send((void*)&xfh,SIZEOF_HTXF_HDR) != SIZEOF_HTXF_HDR)
 	{
 		(new MAlert(_("Error"),_("Could not send command to server"),_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
 		goto done;
 	}
 
-	
-	while (len && trans->fCancel == false) 
+
+	while (len && trans->fCancel == false)
 	{
 		if(endpoint.IsDataPending(timeout))
 		{
@@ -264,11 +265,11 @@ HTaskView::DownloadThread(void* data)
 		}else{
 			goto done;
 		}
-	}		
+	}
 	pos = 0;
 	L16NTOH(len, &buf[38]);
 	len += 16;
-	while (len && trans->fCancel == false) 
+	while (len && trans->fCancel == false)
 	{
 		if(endpoint.IsDataPending(timeout))
 		{
@@ -285,7 +286,7 @@ HTaskView::DownloadThread(void* data)
 		}
 	}
 	L32NTOH(len, &buf[pos - 4]);
-	
+
 	if (!len && trans->fCancel == false)
 	{
 		goto done;
@@ -312,13 +313,13 @@ HTaskView::DownloadThread(void* data)
 		}
 	}
 	delete[] p;
-	
+
 	data_len = len;
 	trans->SetMaxValue(trans->fSize);
 
 	trailingMessage.ReplaceString("text",_("Receiving data…"));
 	trans->Window()->PostMessage(&trailingMessage,trans);
-	
+
 	file.Lock();
 	trans->fStart_Time = time(NULL);
 	while (data_len && trans->fCancel == false) {
@@ -327,10 +328,10 @@ HTaskView::DownloadThread(void* data)
 			len = endpoint.Receive(buf, sizeof buf < data_len ? sizeof buf : data_len);
 			if(len == B_ERROR)
 				break;
-			
+
 			::snooze( SLEEP_TIME );
 			if(len > 0 )
-			{	
+			{
 				file.Write(buf,len);
 				data_len -= len;
 				pos = len;
@@ -374,10 +375,10 @@ HTaskView::DownloadThread(void* data)
 	file.Sync();
 	file.Unset();
 	if( !(trans->fCancel) )
-		be_app->PostMessage(SOUND_FILE_DOWN_SND); 
+		be_app->PostMessage(SOUND_FILE_DOWN_SND);
 done:
 	endpoint.Close();
-	
+
 	trans->fCancel = false;
 	BMessage msg(M_TRANS_COMPLETE);
 	msg.AddPointer("pointer",trans);
@@ -424,7 +425,7 @@ HTaskView::UploadThread(void* data)
 	bool useSock5;
 	BMessage prefs;
 //*********************************//
-	
+
 	trailingMessage.AddString("text",_("Connecting…"));
 	trans->Window()->PostMessage(&trailingMessage,trans);
 
@@ -437,7 +438,7 @@ HTaskView::UploadThread(void* data)
 	}
 	prefs.Unflatten(&preffile);
 	useSock5 = prefs.FindBool("sock5");
-	
+
 	if(endpoint.InitCheck() != B_OK)
 	{
 		(new MAlert(_("Error"),_("Cound not create socket..."),_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
@@ -453,9 +454,9 @@ HTaskView::UploadThread(void* data)
 		}
 	//******** ノーマルな接続 **********//
 	}else{
-	
+
 		if(endpoint.Connect(trans->Address(),trans->Port()+1) != B_OK)
-		{	
+		{
 			BString title = _("Could not connect to server…");
 			title += "\n";
 			title << endpoint.ErrorStr() << " " << _("Type") << ": " << (long)endpoint.Error();
@@ -469,22 +470,22 @@ HTaskView::UploadThread(void* data)
 		BString title = _("Could not open localfile…");
 		title += "\n";
 		title += trans->fLocalpath;
-		(new MAlert(_("Failed to upload"),title.String(),_("OK"),NULL,NULL,B_STOP_ALERT))->Go(); 
+		(new MAlert(_("Failed to upload"),title.String(),_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
 		goto done;
 	}
 	file.Seek(data_offset,SEEK_SET);
 
 	file.GetSize(&filesize);
-	data_len = filesize - data_offset;	
+	data_len = filesize - data_offset;
 
 	xfh.magic = htonl(HTXF_MAGIC_INT);
 	xfh.len = 0;
 	xfh.ref = htonl(trans->fRef);
 	xfh.type = htonl(133 + (data_len));
-	
+
 	trailingMessage.ReplaceString("text",_("Sending commands…"));
 	trans->Window()->PostMessage(&trailingMessage,trans);
-	
+
 	if( endpoint.Send((void*)&xfh,SIZEOF_HTXF_HDR) != SIZEOF_HTXF_HDR)
 	{
 		(new MAlert(_("Error"),_("Could not send commands to server"),_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
@@ -543,39 +544,39 @@ HTaskView::UploadThread(void* data)
 	memcpy(&buf[48],"????",4); //8
 	memcpy(&buf[44+8],"\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0" //20
 					"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x07" //21
-					"\0\0\0\0\0\0\0\x07\0\0\0\0\0\0\0\0\0\0\x03" //19 
+					"\0\0\0\0\0\0\0\x07\0\0\0\0\0\0\0\0\0\0\x03" //19
 					"hxd\0\0DATA\0\0\0\0\0\0\0\0",//17
 					77);
-	
+
 	S32HTON(data_len, &buf[129]);
 	if (endpoint.Send( buf, 133) != 133)
 	{
 		(new MAlert(_("Error"),_("Could not send commands to server…"),_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
 		goto done;
 	}
-	
+
 	trans->SetMaxValue(data_len);
 	transsize = data_len;
 	file.Lock();
-	
+
 	trans->fStart_Time = time(NULL);
 
-	while (data_len && trans->fCancel == false) 
+	while (data_len && trans->fCancel == false)
 	{
 		len = file.Read( buf2, sizeof(buf2)<data_len?sizeof(buf2):data_len);
 		pos = 0;
-		while (len) 
+		while (len)
 		{
 			if ((r = endpoint.Send( &(buf2[pos]), len)) < 1)
 				continue;
-			len -= r;	
+			len -= r;
 			data_len -= r;
 			pos += r;
 			trans->fEnd_Time = time(NULL);
 			float diff = difftime(trans->fEnd_Time,trans->fStart_Time);
 			if(diff < 1) diff = 1;
 			float ave = (transsize - data_len)/diff;
-			
+
 			percent = abs(transsize - data_len)*100/transsize;
 			intper = static_cast<uint32>(percent);
 			if(ave < 1024)
@@ -591,7 +592,7 @@ HTaskView::UploadThread(void* data)
 				::snprintf(labelBuf,1024,"%ld%s %10.2f KB",intper,"%",ave);
 #else
 				::sprintf(labelBuf,"%ld% %10.2f KB",intper,"%",ave);
-#endif			
+#endif
 			}
 			sts += labelBuf;
 			updateMessage.ReplaceInt32("data",pos);
@@ -607,7 +608,7 @@ done:
 	file.Unset();
 	endpoint.Close();
 	if( !(trans->fCancel) )
-		be_app->PostMessage(SOUND_FILE_DOWN_SND); 
+		be_app->PostMessage(SOUND_FILE_DOWN_SND);
 	trans->fCancel = false;
 	BMessage msg(M_TRANS_COMPLETE);
 	msg.AddPointer("pointer",trans);
@@ -684,7 +685,7 @@ HTaskView::ConnectWithSocks5(BNetEndpoint &endpoint)
 	uint32 ad = inet_addr(this->Address());
 	memcpy(&firewall_buf[4], &ad, 4);
 	uint16 pt = htons(this->Port()+1);
-	memcpy(&firewall_buf[8], &pt, 2);	
+	memcpy(&firewall_buf[8], &pt, 2);
 	endpoint.Send(firewall_buf,10);
 	result = endpoint.Receive(firewall_buf, 10);
 	// check what firewall says
@@ -715,7 +716,7 @@ HTaskView::Draw(BRect rect)
 		const rgb_color old = this->HighColor();
 		this->SetHighColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 		this->StrokeRect(rect);
-		this->SetHighColor(old);	
+		this->SetHighColor(old);
 	}
 	Flush();
 }
@@ -723,17 +724,17 @@ HTaskView::Draw(BRect rect)
 /***********************************************************
  * MakeFocus
  ***********************************************************/
-void 
-HTaskView::MakeFocus(bool focused) 
+void
+HTaskView::MakeFocus(bool focused)
 {
 	if (focused != IsFocus())
-	{ 
+	{
 		BStatusBar::MakeFocus(focused);
-		Draw(Bounds()); 
+		Draw(Bounds());
 		Flush();
 	}
 
-	return; 
+	return;
 }
 
 /***********************************************************
@@ -753,8 +754,8 @@ HTaskView::SetQueue(uint32 queue,bool init)
 	{
 		Start();
 		return;
-	}	
-	
+	}
+
 	BString str = _("waiting queue");
 	str += ": ";
 	str << queue;

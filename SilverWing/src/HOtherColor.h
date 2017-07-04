@@ -6,6 +6,8 @@
 #define _HOtherColor_H_
 
 #include <Window.h>
+#include <TextView.h>
+#include <ColorControl.h>
 
 //////   Button Messages
 enum {

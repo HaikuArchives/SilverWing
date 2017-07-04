@@ -1,7 +1,7 @@
 #ifndef __HARTICLEITEM_H__
 #define __HARTICLEITEM_H__
 
-#include "CLVEasyItem.h"
+#include <santa/CLVEasyItem.h>
 #include <String.h>
 #include <iostream>
 
@@ -15,7 +15,7 @@ public:
 		uint32 	Time() {return fTime;}
 const char*		Subject() {return fSubject.String();}
 static	int		CompareItems(const CLVListItem *a_Item1,
-							 const CLVListItem *a_Item2, 
+							 const CLVListItem *a_Item2,
 							 int32 KeyColumn);
 protected:
 	virtual	void 	DrawItemColumn(BView* owner, BRect item_column_rect, int32 column_index, bool complete);
@@ -24,6 +24,6 @@ private:
 	uint32 fParent_id;
 	uint16 fIndex;
 	uint32 fTime;
-	
+
 };
 #endif

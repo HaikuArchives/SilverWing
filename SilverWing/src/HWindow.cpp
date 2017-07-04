@@ -4,7 +4,7 @@
 
 #include "HWindow.h"
 #include "RectUtils.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "HConnectWindow.h"
 #include "HotlineClient.h"
 #include "HSendMsgWindow.h"
@@ -39,7 +39,7 @@
 /***********************************************************
  * Constructor.
  ***********************************************************/
-HWindow::HWindow(BRect rect,const char* name)	
+HWindow::HWindow(BRect rect,const char* name)
 			:BWindow(rect,name,B_DOCUMENT_WINDOW,B_ASYNCHRONOUS_CONTROLS)
 			,fFileWindow(NULL)
 			,fNewsWindow(NULL)
@@ -49,12 +49,12 @@ HWindow::HWindow(BRect rect,const char* name)
 {
 	InitMenu();
 	InitGUI();
-	
+
 	((HApp*)be_app)->Prefs()->GetData("single_window",&fSingleWndMode);
-	
+
 	StartWatchingBookmarks();
 	AddShortcut('/',0,new BMessage(B_ZOOM));
-	
+
 	float min_width,min_height,max_width,max_height;
 	GetSizeLimits(&min_width,&max_width,&min_height,&max_height);
 	min_width = 300;
@@ -78,7 +78,7 @@ HWindow::~HWindow()
 void
 HWindow::InitGUI()
 {
-	
+
 	BRect rect = Bounds();
 	BView *bg = new BView(rect,"bg",B_FOLLOW_ALL,B_WILL_DRAW);
 	bg->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
@@ -99,7 +99,7 @@ HWindow::InitGUI()
 	textrect.bottom -= 2 + 50;
 	chatview = new ChatLogView(textrect,"chatview",B_FOLLOW_ALL,B_WILL_DRAW);
 	chatview->SetStylable(true);
-	// Font 
+	// Font
 	BFont chatfont;
 	int32 font_size;
 	const char* font_family;
@@ -113,7 +113,7 @@ HWindow::InitGUI()
 	fChatColor.green = col;
 	col = indexColor >> 16;
 	fChatColor.red = col;
-	
+
 	((HApp*)be_app)->Prefs()->GetData("nick_color",(int32*)&indexColor);
 	col = indexColor;
 	fNickColor.blue = col;
@@ -121,7 +121,7 @@ HWindow::InitGUI()
 	fNickColor.green = col;
 	col = indexColor >> 16;
 	fNickColor.red = col;
-	
+
 	((HApp*)be_app)->Prefs()->GetData("font_family",&font_family);
 	((HApp*)be_app)->Prefs()->GetData("font_style",&font_style);
 	((HApp*)be_app)->Prefs()->GetData("font_size",&font_size);
@@ -142,12 +142,12 @@ HWindow::InitGUI()
 	chatview->SetViewColor(backColor);
 	//
 	chatview->MakeEditable(false);
-	
+
 	BScrollView* scrollView2 = new BScrollView("scrollview",chatview,B_FOLLOW_ALL,
 												B_WILL_DRAW|B_FRAME_EVENTS,false,true,B_FANCY_BORDER);
 //	chatbgview->AddChild(scrollView2);
-		
-	
+
+
 	textrect.bottom = Bounds().bottom-2;
 	textrect.top = textrect.bottom - 40;
 	textrect.right = Bounds().right -2;
@@ -155,14 +155,14 @@ HWindow::InitGUI()
 	textrect.InsetBy(2,2);
 	textrect.OffsetTo(B_ORIGIN);
 	textrect.OffsetBy(1,1);
-	
+
 	chatmsg = new MLTextControl(textrect,"textview",MWIN_INVOKE_CHAT,B_FOLLOW_TOP_BOTTOM|B_FOLLOW_LEFT_RIGHT);
 	backbox->AddChild(chatmsg);
 //	chatbgview->AddChild(backbox);
 
 	BRect rightrect = bg->Bounds();
 	rightrect.top += (KeyMenuBar()->Bounds()).Height() + 30;
-	//rightrect.left += 202+ B_V_SCROLL_BAR_WIDTH; 
+	//rightrect.left += 202+ B_V_SCROLL_BAR_WIDTH;
 	rightrect.bottom -= B_H_SCROLL_BAR_HEIGHT;
 	fHSplitter = new SplitPane(rightrect,scrollView2,backbox,B_FOLLOW_ALL);
 	fHSplitter->SetBarThickness(BPoint(0,6));
@@ -190,19 +190,19 @@ HWindow::InitGUI()
 	toolrect.left -= 2;
 
 	ResourceUtils utils;
-	
+
 	HToolbar *toolbox = new HToolbar(toolrect,B_FOLLOW_LEFT_RIGHT|B_FOLLOW_TOP);
 	toolbox->AddButton("connectbtn",utils.GetBitmapResource('BBMP',"BMP:CONNECT"),new BMessage(MWIN_CONNECT),_("Connect"));
 	toolbox->AddButton("disconnectbtn",utils.GetBitmapResource('BBMP',"BMP:DISCONNECT"),new BMessage(MWIN_DISCONNECT),_("Disconnect"));
 	toolbox->AddSpace();
 	toolbox->AddButton("msgbtn",utils.GetBitmapResource('BBMP',"BMP:MESSAGE"),new BMessage(MWIN_SEND_MESSAGE),_("Send message"));
-	toolbox->AddButton("prvchatbtn",utils.GetBitmapResource('BBMP',"BMP:PRVCHAT"),new BMessage(MWIN_PRV_CREATE_MESSAGE),_("Create private chat"));	
-	toolbox->AddButton("newsbtn",utils.GetBitmapResource('BBMP',"BMP:NEWS"),new BMessage(MWIN_NEWSMESSAGE),_("Show News"));	
+	toolbox->AddButton("prvchatbtn",utils.GetBitmapResource('BBMP',"BMP:PRVCHAT"),new BMessage(MWIN_PRV_CREATE_MESSAGE),_("Create private chat"));
+	toolbox->AddButton("newsbtn",utils.GetBitmapResource('BBMP',"BMP:NEWS"),new BMessage(MWIN_NEWSMESSAGE),_("Show News"));
 	toolbox->AddButton("filebtn",utils.GetBitmapResource('BBMP',"BMP:FOLDER"),new BMessage(MWIN_FILE_REQUESTED),_("Show Files"));
-	toolbox->AddButton("filetransbtn",utils.GetBitmapResource('BBMP',"BMP:TRANS"),new BMessage(MWIN_FILE_TRANSFER),_("Show Tasks"));		
-	toolbox->AddButton("trackerbtn",utils.GetBitmapResource('BBMP',"BMP:TRACKER"),new BMessage(MWIN_TRACKER),_("Show Tracker"));	
+	toolbox->AddButton("filetransbtn",utils.GetBitmapResource('BBMP',"BMP:TRANS"),new BMessage(MWIN_FILE_TRANSFER),_("Show Tasks"));
+	toolbox->AddButton("trackerbtn",utils.GetBitmapResource('BBMP',"BMP:TRACKER"),new BMessage(MWIN_TRACKER),_("Show Tracker"));
 	toolbox->AddSpace();
-	toolbox->AddButton("infobtn",utils.GetBitmapResource('BBMP',"BMP:INFO"),new BMessage(MWIN_USER_INFO_MESSAGE),_("Get user infomation"));		
+	toolbox->AddButton("infobtn",utils.GetBitmapResource('BBMP',"BMP:INFO"),new BMessage(MWIN_USER_INFO_MESSAGE),_("Get user infomation"));
 	toolbox->AddSpace();
 	toolbox->AddButton("kickbtn",utils.GetBitmapResource('BBMP',"BMP:KICK"),new BMessage(MWIN_KICK_USER),_("Kick"));
 	toolbox->AddButton("banbtn",utils.GetBitmapResource('BBMP',"BMP:BAN"),new BMessage(MWIN_BAN_USER),_("Ban"));
@@ -223,7 +223,7 @@ HWindow::InitGUI()
 
 	HCaption *view = new HCaption(statusrect,"info",listview);
 	box->AddChild(view);
-	bg->AddChild(box);	
+	bg->AddChild(box);
 	AddChild(bg);
 }
 
@@ -238,12 +238,12 @@ HWindow::InitMenu()
 	frame.bottom = frame.top + 15;
 	frame.OffsetTo(B_ORIGIN);
 	BMenuBar *menuBar = new BMenuBar(frame,"MENUBAR");
-	BMenu* aMenu; 
-    
+	BMenu* aMenu;
+
     ResourceUtils rutils;
     MenuUtils *utils = new MenuUtils();
 	//------------------------ File Menu ---------------------------------
-	 aMenu = new BMenu(_("File")); 
+	 aMenu = new BMenu(_("File"));
 	 	utils->AddMenuItem(aMenu,_("Open Downloads Folder"),MWIN_OPEN_DOWNLOAD_FOLDER,this,this,0,0);
 	 	utils->AddMenuItem(aMenu,_("Preferences…"),MWIN_PREFERENCE,this,this,'P',0);
    		aMenu->AddSeparatorItem();
@@ -252,8 +252,8 @@ HWindow::InitMenu()
   		utils->AddMenuItem(aMenu,_("Quit"),B_QUIT_REQUESTED,this,this,'Q');
 
     menuBar->AddItem( aMenu );
-	
-    aMenu = new BMenu(_("Command")); 
+
+    aMenu = new BMenu(_("Command"));
    		utils->AddMenuItem(aMenu,_("Connect…"),MWIN_CONNECT,this,this,'K',0,
     		rutils.GetBitmapResource('BBMP',"BMP:CONNECT"));
    		utils->AddMenuItem(aMenu,_("Disconnect"),MWIN_DISCONNECT,this,this,0,0,
@@ -265,13 +265,13 @@ HWindow::InitMenu()
     		rutils.GetBitmapResource('BBMP',"BMP:PRVCHAT"));
    		utils->AddMenuItem(aMenu,_("Get User Infomation"),MWIN_USER_INFO_MESSAGE,this,this,'I',0,
     		rutils.GetBitmapResource('BBMP',"BMP:INFO"));
-    	
+
     	aMenu->AddSeparatorItem();
    		utils->AddMenuItem(aMenu,_("Kick User"),MWIN_KICK_USER,this,this,0,0,
     		rutils.GetBitmapResource('BBMP',"BMP:KICK"));
    		utils->AddMenuItem(aMenu,_("Ban User"),MWIN_BAN_USER,this,this,0,0,
     		rutils.GetBitmapResource('BBMP',"BMP:BAN"));
-    		
+
    		aMenu->AddSeparatorItem();
    		utils->AddMenuItem(aMenu,_("News"),MWIN_NEWSMESSAGE,this,this,'N',0,
    			rutils.GetBitmapResource('BBMP',"BMP:NEWS"));
@@ -281,16 +281,16 @@ HWindow::InitMenu()
     		rutils.GetBitmapResource('BBMP',"BMP:TRANS"));
    		utils->AddMenuItem(aMenu,_("Tracker"),MWIN_TRACKER,this,this,'T',0,
     		rutils.GetBitmapResource('BBMP',"BMP:TRACKER"));
-   		
-   		
+
+
     menuBar->AddItem( aMenu );
     aMenu = new BMenu(_("Bookmarks"));
     	utils->AddMenuItem(aMenu,_("Add to Bookmarks…"),MWIN_ADDBOOKMARKS,this,this);
 		utils->AddMenuItem(aMenu,_("Rescan Bookmarks"),MWIN_RESCANBOOKMARKS,this,this);
    		aMenu->AddSeparatorItem();
     menuBar->AddItem(aMenu);
-    	
-    this->AddChild(menuBar); 
+
+    this->AddChild(menuBar);
     delete utils;
     InitBookmarks();
 }
@@ -313,8 +313,8 @@ HWindow::InitBookmarks()
 
 	while( err == B_NO_ERROR )
 	{
-		err = dir.GetNextEntry( (BEntry*)&entry, TRUE );	
-			
+		err = dir.GetNextEntry( (BEntry*)&entry, TRUE );
+
 		if( entry.InitCheck() != B_NO_ERROR )
 			break;
 		if( entry.IsFile() )
@@ -385,7 +385,7 @@ HWindow::MessageReceived(BMessage *message)
 	case MWIN_CONNECT:
 	{
 		(new HConnectWindow(RectUtils().CenterRect(300.0,180.0),_("Connect"),false))->Show();
-		break;	
+		break;
 	}
 	/****** Open download folder *********/
 	case MWIN_OPEN_DOWNLOAD_FOLDER:
@@ -394,7 +394,7 @@ HWindow::MessageReceived(BMessage *message)
 		((HApp*)be_app)->Prefs()->GetData("download_path",&path);
 		entry_ref ref;
 		::get_ref_for_path(path,&ref);
-		
+
 		TrackerUtils().OpenFolder(ref);
 		break;
 	}
@@ -404,7 +404,7 @@ HWindow::MessageReceived(BMessage *message)
 		if (fFileWindow != NULL)
 			fFileWindow->PostMessage(B_QUIT_REQUESTED);
 		if (fSingleFileWindow != NULL)
-			fSingleFileWindow->PostMessage(B_QUIT_REQUESTED);	
+			fSingleFileWindow->PostMessage(B_QUIT_REQUESTED);
 		if (fNewsWindow != NULL)
 			fNewsWindow->PostMessage(B_QUIT_REQUESTED);
 		if (fNews15Window != NULL)
@@ -429,12 +429,12 @@ HWindow::MessageReceived(BMessage *message)
 			::sprintf(text,"%s",chatmsg->Text());
 			int32 encoding;
 			TextUtils utils;
-			
+
 			((HApp*)be_app)->Prefs()->GetData("encoding",(int32*)&encoding);
 			if(encoding)
 				utils.ConvertFromUTF8(&text,encoding-1);
 			utils.ConvertReturnsToCR(text);
-			
+
 			if(strlen(text) != 0)
 			{
 				BMessage msg(MWIN_INVOKE_CHAT);
@@ -459,7 +459,7 @@ HWindow::MessageReceived(BMessage *message)
 		if(encoding)
 			utils.ConvertToUTF8(&chat,encoding-1);
 		int32 len = strlen(chat);
-		
+
 		BString str;
 		for(register int32 i = 0;i < len;i++)
 		{
@@ -467,7 +467,7 @@ HWindow::MessageReceived(BMessage *message)
 			if(chat[i+1] == '\n')
 			{
 				InsertChatMessage(str.String());
-				str = "";	
+				str = "";
 			}
 			if(len == i+1)
 				InsertChatMessage(str.String());
@@ -484,7 +484,7 @@ HWindow::MessageReceived(BMessage *message)
 		int32 sel = listview->CurrentSelection();
 		if(sel < 0)
 			break;
-		
+
 		HUserItem *item = cast_as(listview->ItemAt(sel),HUserItem);
 		if(item != NULL)
 		{
@@ -501,7 +501,7 @@ HWindow::MessageReceived(BMessage *message)
 					if(win->IsHidden())
 						win->Show();
 					if(!win->IsActive())
-						win->Activate(true);	
+						win->Activate(true);
 				}else{
 					BMessage msg(MESSAGE_CHAT_MSG);
 					msg.AddInt32("sock",sock);
@@ -513,7 +513,7 @@ HWindow::MessageReceived(BMessage *message)
 				HSendMsgWindow *win = new HSendMsgWindow(rect,title.String(),sock);
 				win->Show();
 			}
-		}	
+		}
 		break;
 	}
 	/********** Create Private Chat　************/
@@ -546,7 +546,7 @@ HWindow::MessageReceived(BMessage *message)
 		int32 sel = listview->CurrentSelection();
 		if(sel < 0)
 			break;
-			
+
 		HUserItem *item = cast_as(listview->ItemAt(sel),HUserItem);
 		if(item != NULL)
 		{
@@ -565,7 +565,7 @@ HWindow::MessageReceived(BMessage *message)
 		if(!fSingleWndMode)
 		{
 			if(fFileWindow == NULL)
-			{			
+			{
 				BRect rect;
 				((HApp*)be_app)->LoadRect("file_rect",&rect);
 				fFileWindow = new HFileWindow( rect,_("Files") ,IsSilverWing);
@@ -581,7 +581,7 @@ HWindow::MessageReceived(BMessage *message)
 			}
 		}else{
 			if(fSingleFileWindow == NULL)
-			{			
+			{
 				BRect rect;
 				((HApp*)be_app)->LoadRect("file_rect",&rect);
 				fSingleFileWindow = new HSingleFileWindow( rect,_("Files") ,IsSilverWing);
@@ -605,7 +605,7 @@ HWindow::MessageReceived(BMessage *message)
 		message->FindInt32("sock",(int32*)&sock);
 		bool msgchat;
 		((HApp*)be_app)->Prefs()->GetData("msgchat",&msgchat);
-		
+
 		HMsgChatWindow *win = FindMsgChat(sock);
 		if(win)
 		{
@@ -628,7 +628,7 @@ HWindow::MessageReceived(BMessage *message)
 			}
 		}
 		break;
-	}	
+	}
 	/********* Close FileWindow ********/
 	case FILE_REMOVE_POINTER:
 	{
@@ -636,7 +636,7 @@ HWindow::MessageReceived(BMessage *message)
 			fSingleFileWindow = NULL;
 		else
 			fFileWindow = NULL;
-		break;		
+		break;
 	}
 	/************ Tracker Reader***************/
 	case MWIN_TRACKER:
@@ -657,7 +657,7 @@ HWindow::MessageReceived(BMessage *message)
 		{
 			app->TaskWindow()->Show();
 		}else{
-			
+
 			app->TaskWindow()->Hide();
 		}
 		break;
@@ -669,7 +669,7 @@ HWindow::MessageReceived(BMessage *message)
 			break;
 		//******************** Old News ************************
 		if( ((HApp*)be_app)->ServerVersion() < 151)
-		{	
+		{
 			BRect rect;
 			((HApp*)be_app)->LoadRect("news_rect",&rect);
 			if(fNewsWindow == NULL)
@@ -701,7 +701,7 @@ HWindow::MessageReceived(BMessage *message)
 		break;
 	}
 	/******** Article List Receive **************/
-	case H_NEWS_RECEIVE_ARTICLELIST:	
+	case H_NEWS_RECEIVE_ARTICLELIST:
 	/*************** Recv News15 Category　****************/
 	case H_NEWS_RECEIVE_FOLDER:
 	{
@@ -734,20 +734,20 @@ HWindow::MessageReceived(BMessage *message)
 	}
 	/// Connect from Bookmark
 	case CONNECT_BOOKMARK_MSG:
-	{	
+	{
 		BString address,login,password,port;
 		AppUtils utils;
 		BPath path = utils.GetAppDirPath(be_app);
 		path.Append("Bookmarks");
 		path.Append(message->FindString("name"));
-		
+
 		BFile file(path.Path(),B_READ_ONLY);
 		if(file.InitCheck() == B_OK)
 		{
 			BString address,login,password;
 			BMessage msg;
 			uint16 port;
-			
+
 			msg.Unflatten(&file);
 			if(msg.HasString("address")&&msg.HasInt16("port"))
 			{
@@ -755,7 +755,7 @@ HWindow::MessageReceived(BMessage *message)
 			login = msg.FindString("login");
 			port = msg.FindInt16("port");
 			password = msg.FindString("password");
-			
+
 			BMessage cntMsg(CONNECT_CONNECT_REQUESTED);
 			cntMsg.AddString("address",address.String());
 			cntMsg.AddString("login",login.String());
@@ -766,7 +766,7 @@ HWindow::MessageReceived(BMessage *message)
 				(new MAlert(_("Error"),_("Bad bookmark file…"),_("OK"),NULL,NULL,B_STOP_ALERT))->Go();
 		}
 		break;
-	}	
+	}
 	/*********** Bookmark *********/
 	case MWIN_ADDBOOKMARKS:
 	{
@@ -836,17 +836,17 @@ HWindow::MessageReceived(BMessage *message)
 	case MWIN_KICK_USER:
 	{
 		if( ((HApp*)be_app)->Client()->isConnected() != true)
-			break;		
+			break;
 		uint32 sock;
 		BMessage msg(H_KICK_USER);
-		
+
 		HUserItem *item = (HUserItem*)listview->ItemAt(listview->CurrentSelection());
 		if(item != NULL)
 		{
 			sock = item->Sock();
 			msg.AddInt32("sock",sock);
 			((HApp*)be_app)->Client()->PostMessage(&msg);
-		}	
+		}
 		break;
 	}
 	/*********** Ban User **************/
@@ -859,14 +859,14 @@ HWindow::MessageReceived(BMessage *message)
 		if(sel < 0)
 			break;
 		BMessage msg(H_BAN_USER);
-		
+
 		HUserItem *item = cast_as(listview->ItemAt(sel),HUserItem);
 		if(item != NULL)
 		{
 			sock = item->Sock();
 			msg.AddInt32("sock",sock);
 			((HApp*)be_app)->Client()->PostMessage(&msg);
-		}	
+		}
 		break;
 	}
 	/******** Drop from Tracker ************/
@@ -920,7 +920,7 @@ HWindow::MessageReceived(BMessage *message)
 		uint32 font_color = message->FindInt32("font_color");
 		uint32 back_color = message->FindInt32("back_color");
 		uint32 nick_color = message->FindInt32("nick_color");
-		
+
 		uint8 col;
 		col = font_color;
 		fChatColor.blue = col;
@@ -928,14 +928,14 @@ HWindow::MessageReceived(BMessage *message)
 		fChatColor.green = col;
 		col = font_color >> 16;
 		fChatColor.red = col;
-		
+
 		col = nick_color;
 		fNickColor.blue = col;
 		col = nick_color >> 8;
 		fNickColor.green = col;
 		col = nick_color >> 16;
 		fNickColor.red = col;
-		
+
 		BFont font;
 		font.SetSize(size);
 		font.SetFamilyAndStyle(family,style);
@@ -971,7 +971,7 @@ HWindow::MessageReceived(BMessage *message)
 		HToolbarButton *btn = static_cast<HToolbarButton*>(pointer);
 		if(btn == NULL)
 			break;
-					
+
 		if(::strcmp(name,"infobtn") == 0
 			||::strcmp(name,"kickbtn") == 0
 			||::strcmp(name,"banbtn") == 0
@@ -984,7 +984,7 @@ HWindow::MessageReceived(BMessage *message)
 				btn->SetEnabled(true);
 			}else{
 				btn->SetEnabled(false);
-			}	
+			}
 		}else if(::strcmp(name,"newsbtn") == 0
 			||::strcmp(name,"filebtn") == 0)
 		{
@@ -1018,9 +1018,9 @@ void
 HWindow::RemoveUser(uint16 sock)
 {
 	int32 i = listview->CountItems();
-	
+
 	BString nick = "";
-	
+
 	for(int32 j= 0;j < i ; j++)
 	{
 		HUserItem *item = cast_as(listview->ItemAt(j),HUserItem);
@@ -1049,7 +1049,7 @@ HWindow::RemoveUser(uint16 sock)
 			break;
 			}
 	}
-	
+
 	HMsgChatWindow *win = FindMsgChat(sock);
 	if(win)
 	{
@@ -1085,7 +1085,7 @@ HWindow::ChangeUser(uint16 sock,uint16 icon,uint16 color,const char* nick)
 	{
 		item->ChangeUser(sock,icon,color,nick);
 		listview->InvalidateItem(itemIndex);
-	}else{	
+	}else{
 		bool which;
 		((HApp*)be_app)->Prefs()->GetData("showlogin",&which);
 		if(which )
@@ -1115,7 +1115,7 @@ void
 HWindow::RemoveAllUsers()
 {
 	if(listview->CountItems())
-		listview->RemoveAll();	
+		listview->RemoveAll();
 }
 
 /***********************************************************
@@ -1152,13 +1152,13 @@ HWindow::InsertChatMessage(const char* text)
 		run1.offset = 0;
 		run1.font = font;
 		run1.color = fNickColor;
-	
+
 		text_run	run2;
 		run2.offset = 15 + time_offset;
 		run2.font = font;
 		run2.color = fChatColor;
-	
-		text_run_array	array;	
+
+		text_run_array	array;
 		array.count = 2;
 		array.runs[0] = run1;
 		array.runs[1] = run2;
@@ -1175,13 +1175,13 @@ HWindow::InsertChatMessage(const char* text)
 		chatview->Insert(str.String(),&array);
 
 		/*******************************/
-		
+
 	}else{
 		text_run	run;
 		run.offset = 0;
 		run.font = font;
 		run.color = fChatColor;
-		
+
 		text_run_array	array;
 		array.count = 1;
 		array.runs[0] = run;
@@ -1210,7 +1210,7 @@ HWindow::FindUser(uint32 sock,uint32 &out_icon,BString &out_nick)
 			out_nick = item->Nick();
 			found = true;
 			break;
-		}	
+		}
 	}
 	return found;
 }
@@ -1266,14 +1266,14 @@ HWindow::RescanBookmarks()
 	// Remove All Bookmarks
 	BMenuBar* menuBar = this->KeyMenuBar();
 	BMenu *menu = menuBar->SubmenuAt(2);
-	
+
 	BMenuItem *item = menu->ItemAt(3);
 	while(item != NULL)
 	{
 		menu->RemoveItem(item);
 		delete item;
 		item = menu->ItemAt(3);
-	}	
+	}
 	InitBookmarks();
 }
 
@@ -1284,7 +1284,7 @@ void
 HWindow::MenusBeginning()
 {
 	HUserList *list = cast_as(FindView("userlist"),HUserList);
-	
+
 	if(((HApp*)be_app)->IsConnected() == false)
 	{
 		KeyMenuBar()->FindItem(MWIN_FILE_REQUESTED)->SetEnabled(false);
@@ -1315,8 +1315,8 @@ HWindow::MenusBeginning()
 			KeyMenuBar()->FindItem(MWIN_BAN_USER)->SetEnabled(false);
 		}
 	}
-	
-}	
+
+}
 
 /***********************************************************
  * MakeMessageChat
@@ -1375,105 +1375,8 @@ HWindow::CheckCPU()
 	system_info sysinfo;
 	BString str = "Unknown";
 	get_system_info(&sysinfo);
-	
-	switch(sysinfo.cpu_type)
-	{
-	case B_CPU_PPC_601:
-		str = "PowerPC 601";
-		break;
-	case B_CPU_PPC_603:
-		str = "PowerPC 603";
-		break;
-	case B_CPU_PPC_603e:
-		str = "PowerPC 603e";
-		break;
-	case B_CPU_PPC_604:
-		str = "PowerPC 604";
-		break;
-	case B_CPU_PPC_604e:
-		str = "PowerPC 604e";
-		break;
-	case B_CPU_PPC_750:
-		str = "PowerPC G3";
-		break;
-	case B_CPU_INTEL_X86:
-		str = "Intel x86";
-		break;	
-	case B_CPU_INTEL_PENTIUM:
-	case B_CPU_INTEL_PENTIUM75:
-		str = "Intel Pentium";
-		break;
-	case B_CPU_INTEL_PENTIUM_486_OVERDRIVE:
-	case B_CPU_INTEL_PENTIUM75_486_OVERDRIVE:	
-		str = "Intel Pentium OverDrive";
-		break;
-	case B_CPU_INTEL_PENTIUM_MMX:
-//	case B_CPU_INTEL_PENTIUM_MMX_MODEL_4:
-	case B_CPU_INTEL_PENTIUM_MMX_MODEL_8:	
-		str = "Intel Pentium MMX";
-		break;	
-	case B_CPU_INTEL_PENTIUM_PRO:
-		str = "Intel Pentium Pro";
-		break;
-	case B_CPU_INTEL_PENTIUM_II:
-//	case B_CPU_INTEL_PENTIUM_II_MODEL_3:
-	case B_CPU_INTEL_PENTIUM_II_MODEL_5:
-		str = "Intel Pentium II";
-		break;
-	case B_CPU_INTEL_CELERON:
-		str = "Intel Celeron";
-		break;
-	case B_CPU_INTEL_PENTIUM_III:
-#ifdef B_BEOS_VERSION_5
-	case B_CPU_INTEL_PENTIUM_III_MODEL_8:
-#endif
-		str = "Intel Pentium III";
-		break;
-#ifdef B_BEOS_VERSION_5
-	case B_CPU_AMD_ATHLON_MODEL1:
-		str = "AMD ATHLON";
-		break;
-#endif
-	case B_CPU_AMD_X86:
-		str = "AMD x86";
-	 	break;
-	case B_CPU_AMD_K5_MODEL0:
-	case B_CPU_AMD_K5_MODEL1:
-	case B_CPU_AMD_K5_MODEL2:
-	case B_CPU_AMD_K5_MODEL3:
-		str = "AMD K5";
-		break;
-	case B_CPU_AMD_K6_MODEL6:
-	case B_CPU_AMD_K6_MODEL7:
-	case B_CPU_AMD_K6_MODEL8:
-//	case B_CPU_AMD_K6_2:
-	case B_CPU_AMD_K6_MODEL9:
-		str = "AMD K6 III";
-		break;
-	case B_CPU_CYRIX_X86:
-		str = "Cyrix x86";
-		break;
-	case B_CPU_CYRIX_GXm:
-		str = "Cyrix GXm";
-		break;
-	case B_CPU_CYRIX_6x86MX:
-		str = "Cyrix 6x86MX";
-		break;
-	case B_CPU_RISE_X86:
-		str = "RISE x86";
-		break;
-	case B_CPU_RISE_mP6:
-		str = "RISE mP6";
-		break;
-	default:
-		str = "Unknown";
-	}	
-	int64 cpu_speed;
-	cpu_speed = sysinfo.cpu_clock_speed;
-	/******* for PPC 604e ********/
-	if(str.Compare("PowerPC 604e") == 0)
-		cpu_speed *= 2;
-	int target = cpu_speed / 1000000;
+
+	int target = 0;
 	int frac = target % 100;
 	int delta = -frac;
 	int at = 0;
@@ -1486,7 +1389,7 @@ HWindow::CheckCPU()
 			delta = ndelta;
 		}
 	}
-	
+
 	BString clock;
 
 	clock << (long)(target + delta) << " MHz";

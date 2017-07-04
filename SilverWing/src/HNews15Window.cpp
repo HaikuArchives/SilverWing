@@ -9,7 +9,7 @@
 #include "HApp.h"
 #include "HToolbar.h"
 #include "CTextView.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "HArticleView.h"
 #include "HToolbar.h"
 #include "HotlineClient.h"
@@ -30,7 +30,7 @@
 /***********************************************************
  * Constructor.
  ***********************************************************/
-HNews15Window::HNews15Window(BRect rect,const char* title) 
+HNews15Window::HNews15Window(BRect rect,const char* title)
 				:BWindow(rect,title,B_DOCUMENT_WINDOW,B_ASYNCHRONOUS_CONTROLS)
 {
 	InitGUI();
@@ -72,7 +72,7 @@ HNews15Window::InitGUI()
 	fHSplitter->SetBarThickness(BPoint(0,kBarThickness));
 	BetterScrollView *scroller;
 	new HCategoryList(Bounds(),&scroller,"catelist");
-	
+
 	fVSplitter = new SplitPane(rightrect,scroller,fHSplitter,B_FOLLOW_ALL);
 	fVSplitter->SetAlignment(B_VERTICAL);
 	fVSplitter->SetViewInsetBy(BPoint(0,0));
@@ -99,7 +99,7 @@ HNews15Window::InitGUI()
 	toolbar->AddSpace();
 	toolbar->AddButton("trashbtn",utils.GetBitmapResource('BBMP',"BMP:TRASH"),new BMessage(NEWS15_DELETE_MESSAGE),"Delete");
 	bg->AddChild(toolbar);
-	
+
 	/********** Captionの追加 ***********/
 	BRect captionframe = Bounds();
 	captionframe.bottom+=2;
@@ -132,7 +132,7 @@ HNews15Window::MessageReceived(BMessage *message)
 	{
 		int32 count;
 		type_code type;
-		HCategoryList *list = cast_as(FindView("catelist"),HCategoryList); 
+		HCategoryList *list = cast_as(FindView("catelist"),HCategoryList);
 		message->GetInfo("name",&type,&count);
 		for(register int i = 0;i< count;i++)
 		{
@@ -144,7 +144,7 @@ HNews15Window::MessageReceived(BMessage *message)
 		}
 		fCaption->SetLabel("");
 		fCaption->StopBarberPole();
-		
+
 		break;
 	}
 	/******* Article List Recieve *************/
@@ -152,10 +152,10 @@ HNews15Window::MessageReceived(BMessage *message)
 	{
 		fCaption->SetLabel("");
 		fCaption->StopBarberPole();
-		
+
 		int32 count;
 		type_code type;
-		HArticleList *list = cast_as(FindView("artlist"),HArticleList); 
+		HArticleList *list = cast_as(FindView("artlist"),HArticleList);
 		list->RemoveAll();
 		const char* category = message->FindString("category");
 		list->SetCategory(category );
@@ -193,17 +193,17 @@ HNews15Window::MessageReceived(BMessage *message)
 	 */
 	case H_CATEGORY_SEL_CHANGED:
 	{
-		HArticleList *list = cast_as(FindView("artlist"),HArticleList); 
+		HArticleList *list = cast_as(FindView("artlist"),HArticleList);
 		list->RemoveAll();
 		break;
 	}
-	/* 
+	/*
 	 * Post news thread.
 	 */
 	case NEWS15_POST_THREAD_MESSAGE:
 	{
-		HArticleList *list = cast_as(FindView("artlist"),HArticleList); 
-		HCategoryList *catlist = cast_as(FindView("catelist"),HCategoryList); 
+		HArticleList *list = cast_as(FindView("artlist"),HArticleList);
+		HCategoryList *catlist = cast_as(FindView("catelist"),HCategoryList);
 		int32 sel = catlist->CurrentSelection();
 		if(sel < 0)
 			break;
@@ -220,7 +220,7 @@ HNews15Window::MessageReceived(BMessage *message)
 	 */
 	case NEWS15_REPLY_MESSAGE:
 	{
-		HArticleList *list = cast_as(FindView("artlist"),HArticleList); 
+		HArticleList *list = cast_as(FindView("artlist"),HArticleList);
 		int32 sel = list->CurrentSelection();
 		if(sel >= 0)
 		{
@@ -228,11 +228,11 @@ HNews15Window::MessageReceived(BMessage *message)
 			BString tmp = item->Subject();
 			BString subject = "";
 			//if(tmp.find("Re:") != 0)
-			subject = "Re:"; 
+			subject = "Re:";
 			subject << item->Subject();
 			char* sub = new char[subject.Length()+1];
 			::strcpy(sub,subject.String());
-			
+
 			int32 encoding;
 			((HApp*)be_app)->Prefs()->GetData("encoding",(int32*)&encoding);
 			if(encoding)
@@ -249,9 +249,9 @@ HNews15Window::MessageReceived(BMessage *message)
 	 */
 	case NEWS15_REFRESH_MESSAGE:
 	{
-		HArticleList *alist = cast_as(this->FindView("artlist"),HArticleList); 
+		HArticleList *alist = cast_as(this->FindView("artlist"),HArticleList);
 		alist->RemoveAll();
-		HCategoryList *clist = cast_as(this->FindView("catelist"),HCategoryList); 
+		HCategoryList *clist = cast_as(this->FindView("catelist"),HCategoryList);
 		clist->RemoveAll();
 		HArticleView *artview = cast_as(this->FindView("articleview"),HArticleView);
 		artview->ResetAll();
@@ -259,10 +259,10 @@ HNews15Window::MessageReceived(BMessage *message)
 		msg.AddString("path","/");
 		msg.AddInt32("index",0);
 		be_app->PostMessage(&msg);
-		
+
 		fCaption->SetLabel(_("Getting News Categories…"));
 		fCaption->StartBarberPole();
-		
+
 		break;
 	}
 	/*
@@ -270,7 +270,7 @@ HNews15Window::MessageReceived(BMessage *message)
 	 */
 	case NEWS15_CREATE_GROUP:
 	{
-		HCategoryList *clist = cast_as(FindView("catelist"),HCategoryList); 
+		HCategoryList *clist = cast_as(FindView("catelist"),HCategoryList);
 		int32 sel = clist->CurrentSelection();
 		BMessage *msg = new BMessage(H_CREATE_FOLDER);
 		if(sel >=0)
@@ -292,7 +292,7 @@ HNews15Window::MessageReceived(BMessage *message)
 	 */
 	case NEWS15_CREATE_CATEGORY:
 	{
-		HCategoryList *clist = cast_as(FindView("catelist"),HCategoryList); 
+		HCategoryList *clist = cast_as(FindView("catelist"),HCategoryList);
 		int32 sel = clist->CurrentSelection();
 		BMessage *msg = new BMessage(H_CREATE_CATEGORY);
 		if(sel >=0)
@@ -306,7 +306,7 @@ HNews15Window::MessageReceived(BMessage *message)
 		}
 		HDialog *dlg = new HDialog(RectUtils().CenterRect(250,80),_("Create folder"),msg,_("Folder name:"),_("Create"));
 		dlg->Show();
-		
+
 		break;
 	}
 	/*
@@ -369,11 +369,11 @@ HNews15Window::MessageReceived(BMessage *message)
 bool
 HNews15Window::QuitRequested()
 {
-	HArticleList *alist = cast_as(FindView("artlist"),HArticleList); 
+	HArticleList *alist = cast_as(FindView("artlist"),HArticleList);
 	alist->RemoveAll();
-	HCategoryList *clist = cast_as(FindView("catelist"),HCategoryList); 
+	HCategoryList *clist = cast_as(FindView("catelist"),HCategoryList);
 	clist->RemoveAll();
-	
+
 	BPoint pos = fHSplitter->GetBarPosition();
 	int32 p = static_cast<int32>(pos.y);
 	((HApp*)be_app)->Prefs()->SetData("news_hbar_pos",p);

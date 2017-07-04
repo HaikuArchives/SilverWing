@@ -4,7 +4,7 @@
 #include <ScrollView.h>
 
 #include "HArticleView.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "URLTextView.h"
 #include "TextUtils.h"
 #include "HPrefs.h"
@@ -32,7 +32,7 @@ HArticleView::~HArticleView()
 void
 HArticleView::InitGUI()
 {
-	this->SetViewColor(	ui_color(B_PANEL_BACKGROUND_COLOR));	
+	this->SetViewColor(	ui_color(B_PANEL_BACKGROUND_COLOR));
 	BRect rect= Bounds();
 	rect.left += 5;
 	rect.right -= 5;
@@ -62,9 +62,9 @@ HArticleView::InitGUI()
 	control = new BStringView(rect,"date","",B_FOLLOW_LEFT_RIGHT|B_FOLLOW_TOP);
 	control->SetViewColor(White);
 	this->AddChild(control);
-	this->AddChild(label);	
+	this->AddChild(label);
 	//rect.OffsetBy(0,20);
-	
+
 	BRect textRect = this->Bounds();
 	textRect.right -= B_V_SCROLL_BAR_WIDTH+5;
 	textRect.left += 5;
@@ -111,7 +111,7 @@ HArticleView::SetSender(const char* text)
 		view->SetText(str.String());
 	}
 	delete[] t;
-}	
+}
 
 /***********************************************************
  * SetSubject
@@ -128,14 +128,14 @@ HArticleView::SetSubject(const char* text)
 	if(encoding)
 		utils.ConvertToUTF8(&t,encoding-1);
 	utils.ConvertReturnsToLF(t);
-	
+
 	BAutolock lock(Window());
 	if(lock.IsLocked())
 	{
 		view->SetText(t);
 	}
 	delete[] t;
-}	
+}
 
 /***********************************************************
  * SetDate
@@ -144,13 +144,13 @@ void
 HArticleView::SetDate(const char* text)
 {
 	BStringView *view = cast_as(FindView("date"),BStringView);
-	
+
 	BAutolock lock(Window());
 	if(lock.IsLocked())
 	{
 		view->SetText(text);
 	}
-}	
+}
 
 /***********************************************************
  * SetArticle
@@ -168,12 +168,12 @@ HArticleView::SetArticle(const char* text)
 	if(encoding)
 		utils.ConvertToUTF8(&t,encoding-1);
 	BString str = t;
-	
+
 	BAutolock lock(Window());
 	view->SetText(str.String());
-	
+
 	delete[] t;
-}	
+}
 
 /***********************************************************
  * ResetAll

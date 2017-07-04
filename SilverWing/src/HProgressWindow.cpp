@@ -1,7 +1,7 @@
 #include <Message.h>
 
 #include "HProgressWindow.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "HApp.h"
 
 /***********************************************************
@@ -58,7 +58,7 @@ HProgressWindow::MessageReceived(BMessage *message)
 		const char* label = message->FindString("label");
 		fStatusBar->Reset(label);
 		break;
-	}	
+	}
 	default:
 		BWindow::MessageReceived(message);
 	}

@@ -2,6 +2,7 @@
 #define __HConnectWindow_H__
 
 #include <Window.h>
+#include <Menu.h>
 
 enum{
 CONNECT_CONNECT_MSG = 'CCMG',
@@ -17,7 +18,7 @@ public:
 							HConnectWindow(BRect rect,const char* name,bool edit);
 						void SaveServer(const char* name
 										,const char* address
-										,const char* login 
+										,const char* login
 										,const char* password
 										,int16 port);
 						void InitGUI(bool edit);
@@ -34,5 +35,4 @@ protected:
 					BMenu*	 InitBookmarks();
 protected:
 };
-#endif		
-					
+#endif

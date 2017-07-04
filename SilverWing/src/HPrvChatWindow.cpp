@@ -4,7 +4,7 @@
 #include "HPrvChatWindow.h"
 #include "HApp.h"
 #include "RectUtils.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "TextUtils.h"
 #include "ResourceUtils.h"
 #include "HToolbar.h"
@@ -36,7 +36,7 @@ HPrvChatWindow::HPrvChatWindow(BRect rect,const char *name,uint32 pcref)
 {
 	InitGUI();
 	AddShortcut('/',0,new BMessage(B_ZOOM));
-	
+
 	float min_width,min_height,max_width,max_height;
 	GetSizeLimits(&min_width,&max_width,&min_height,&max_height);
 	min_width = 300;
@@ -91,7 +91,7 @@ HPrvChatWindow::InitGUI()
 	fChatColor.green = col;
 	col = indexColor >> 16;
 	fChatColor.red = col;
-	
+
 	((HApp*)be_app)->Prefs()->GetData("nick_color",(int32*)&indexColor);
 	col = indexColor;
 	fNickColor.blue = col;
@@ -99,7 +99,7 @@ HPrvChatWindow::InitGUI()
 	fNickColor.green = col;
 	col = indexColor >> 16;
 	fNickColor.red = col;
-	
+
 	((HApp*)be_app)->Prefs()->GetData("font_family",&font_family);
 	((HApp*)be_app)->Prefs()->GetData("font_style",&font_style);
 	((HApp*)be_app)->Prefs()->GetData("font_size",&font_size);
@@ -125,7 +125,7 @@ HPrvChatWindow::InitGUI()
 	BScrollView* scrollView2 = new BScrollView("scrollview",chatview,B_FOLLOW_ALL,
 												B_WILL_DRAW|B_FRAME_EVENTS,false,true,B_FANCY_BORDER);
 	//chatbgview->AddChild(scrollView2);
-		
+
 	textrect.bottom = Bounds().bottom-2;
 	textrect.top = textrect.bottom - 40;
 	textrect.right = Bounds().right -2;
@@ -138,7 +138,7 @@ HPrvChatWindow::InitGUI()
 	textrect.OffsetBy(1,1);
 	textview = new MLTextControl(textrect,"textview",PRVCHAT_INVOKE_CHAT,B_FOLLOW_ALL);
 	backbox->AddChild(textview);
-	
+
 	BRect rightrect = bg->Bounds();
 	rightrect.top += 30;
 	rightrect.bottom -= B_H_SCROLL_BAR_HEIGHT;
@@ -150,7 +150,7 @@ HPrvChatWindow::InitGUI()
 	int32 pos;
 	((HApp*)be_app)->Prefs()->GetData("prvchat_hbar_pos",&pos);
 	fHSplitter->SetBarPosition(BPoint(0,pos));
-	
+
 	fVSplitter = new SplitPane(rightrect,fHSplitter,scrollView,B_FOLLOW_ALL);
 	fVSplitter->SetAlignment(B_VERTICAL);
 	((HApp*)be_app)->Prefs()->GetData("prvchat_vbar_pos",&pos);
@@ -159,7 +159,7 @@ HPrvChatWindow::InitGUI()
 	fVSplitter->SetResizeViewOne(true, true);
 	fVSplitter->SetBarPosition(BPoint(pos,0));
 	bg->AddChild(fVSplitter);
-	
+
 	BRect toolrect = Bounds();
 	toolrect.bottom = toolrect.top + 30;
 	toolrect.left -= 1;
@@ -168,7 +168,7 @@ HPrvChatWindow::InitGUI()
 	toolbar->AddButton("msgbtn",utils.GetBitmapResource('BBMP',"BMP:MESSAGE"),new BMessage(PRVCHAT_SEND_MESSAGE),_("Send message"));
 	toolbar->AddButton("infobtn",utils.GetBitmapResource('BBMP',"BMP:INFO"),new BMessage(PRVCHAT_GET_INFO),_("Get user infomation"));
 	toolbar->AddButton("topicbtn",utils.GetBitmapResource('BBMP',"BMP:TOPIC"),new BMessage(PRVCHAT_CHANGE_TOPIC),_("Change topic"));
-	bg->AddChild(toolbar);	
+	bg->AddChild(toolbar);
 	/****************** StatusBar ***********************/
 	BRect statusrect = this->Bounds();
 	statusrect.bottom += 2;
@@ -182,10 +182,10 @@ HPrvChatWindow::InitGUI()
 	statusrect.bottom -= 1;
 	statusrect.left += 7;
 	statusrect.right -= 7;
-	
+
 	HPrvChatCaption *view = new HPrvChatCaption(statusrect,"info",listview);
 	box->AddChild(view);
-	bg->AddChild(box);	
+	bg->AddChild(box);
 	AddChild(bg);
 }
 
@@ -210,10 +210,10 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 			BString title = _("Private Chat");
 			title << ":" << topic;
 			SetTitle(title.String());
-		} 
+		}
 		break;
 	}
-	// 
+	//
 	case PRVCHAT_CHANGE_TOPIC:
 	{
 		BMessage *msg = new BMessage(H_PRVCHAT_TOPIC_CHANGE);
@@ -285,7 +285,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 		int32 encoding;
 		((HApp*)be_app)->Prefs()->GetData("encoding",(int32*)&encoding);
 		if(encoding)
-		{	
+		{
 			utils.ConvertToUTF8(&chat,encoding-1);
 		}
 		int32 len = strlen(chat);
@@ -296,7 +296,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 			if(chat[i+1] == '\n')
 			{
 				InsertChatMessage(str.String());
-				str = "";	
+				str = "";
 			}
 			if(len == i+1)
 				InsertChatMessage(str.String());
@@ -314,7 +314,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 		uint32 font_color = message->FindInt32("font_color");
 		uint32 back_color = message->FindInt32("back_color");
 		uint32 nick_color = message->FindInt32("nick_color");
-		
+
 		rgb_color color;
 		uint8 col;
 		col = font_color;
@@ -330,7 +330,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 		fNickColor.green = col;
 		col = font_color >> 16;
 		fNickColor.red = col;
-		
+
 		BFont font;
 		font.SetSize(size);
 		font.SetFamilyAndStyle(family,style);
@@ -356,7 +356,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 		if(lock.IsLocked())
 		{
 			HUserItem *item = cast_as(listview->ItemAt(sel),HUserItem);
-						
+
 			if(item != NULL)
 			{
 				uint32 sock = item->Sock();
@@ -373,7 +373,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 					HSendMsgWindow *win = new HSendMsgWindow(rect,title.String(),sock);
 					win->Show();
 				}
-			}		
+			}
 		}
 		break;
 	}
@@ -392,7 +392,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 				BMessage msg(MWIN_USER_INFO_MESSAGE);
 				msg.AddInt32("sock",sock);
 				((HApp*)be_app)->Client()->PostMessage(&msg);
-				}	
+				}
 		}
 		break;
 	}
@@ -405,7 +405,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 		HToolbarButton *btn = static_cast<HToolbarButton*>(pointer);
 		if(btn == NULL)
 			break;
-					
+
 		if(::strcmp(name,"infobtn") == 0
 			||::strcmp(name,"msgbtn") == 0)
 		{
@@ -415,7 +415,7 @@ HPrvChatWindow::MessageReceived(BMessage *message)
 				btn->SetEnabled(true);
 			}else{
 				btn->SetEnabled(false);
-			}	
+			}
 		}
 		break;
 	}
@@ -447,7 +447,7 @@ HPrvChatWindow::InsertChatMessage(const char* text)
 		((HApp*)be_app)->Prefs()->GetData("timestamp",&timestamp);
 		if(timestamp)
 			time_offset = 8;
-		
+
 		//
 		if(strlen(text) >= 15 && text[14] == ':') // chat
 		{
@@ -455,13 +455,13 @@ HPrvChatWindow::InsertChatMessage(const char* text)
 			run1.offset = 0;
 			run1.font = font;
 			run1.color = fNickColor;
-		
+
 			text_run	run2;
 			run2.offset = 15 + time_offset;
 			run2.font = font;
 			run2.color = fChatColor;
-		
-			text_run_array	array;	
+
+			text_run_array	array;
 			array.count = 2;
 			array.runs[0] = run1;
 			array.runs[1] = run2;
@@ -481,14 +481,14 @@ HPrvChatWindow::InsertChatMessage(const char* text)
 			run.offset = 0;
 			run.font = font;
 			run.color = fChatColor;
-		
+
 			text_run_array	array;
 			array.count = 1;
 			array.runs[0] = run;
 			chatview->Insert(text,&array);
 		}
 
-		
+
 		float min,max;
 		(chatview->ScrollBar(B_VERTICAL))->GetRange(&min,&max);
 		(chatview->ScrollBar(B_VERTICAL))->SetValue(max);
@@ -507,7 +507,7 @@ HPrvChatWindow::QuitRequested()
 	pos = fHSplitter->GetBarPosition();
 	x = static_cast<int32>(pos.y);
 	((HApp*)be_app)->Prefs()->SetData("prvchat_hbar_pos",x);
-	
+
 	((HApp*)be_app)->SaveRect("prvchat_window_rect",this->Frame());
 	BMessage msg(PRVCHAT_PRVCHAT_DELETE);
 	msg.AddPointer("window",this);
@@ -525,7 +525,7 @@ HPrvChatWindow::AddUserItem(uint16 sock ,uint16 icon,uint16 color,const char* ni
 	if( lock.IsLocked() )
 	{
 		listview->AddItem(new HUserItem(sock,icon,color,nick));
-	}	
+	}
 }
 
 /***********************************************************
@@ -545,7 +545,7 @@ HPrvChatWindow::ChangeUserItem(uint16 sock ,uint16 icon,uint16 color,const char*
 			if(userItem == NULL)
 				break;
 			if( userItem->Sock() == sock)
-			{	
+			{
 				find = true;
 				userItem->ChangeUser(sock,icon,color,nick);
 				listview->InvalidateItem(i);
@@ -557,7 +557,7 @@ HPrvChatWindow::ChangeUserItem(uint16 sock ,uint16 icon,uint16 color,const char*
 			listview->AddItem(new HUserItem(sock,icon,color,nick));
 			be_app->PostMessage(SOUND_LOGIN_SND);
 		}
-	}	
+	}
 }
 
 /***********************************************************
@@ -575,12 +575,12 @@ HPrvChatWindow::RemoveUserItem(uint32 sock)
 			if(user == NULL)
 				break;
 			if( user->Sock() == sock)
-			{	
+			{
 				HUserItem *item = cast_as(listview->RemoveItem(i),HUserItem);
 				be_app->PostMessage(SOUND_LOGOUT_SND);
 				delete item;
 				break;
 			}
 		}
-	}	
+	}
 }

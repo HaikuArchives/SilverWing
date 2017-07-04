@@ -5,7 +5,7 @@
 
 #include "HApp.h"
 #include "HCaption.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 
 /***********************************************************
  * Constructor.
@@ -13,11 +13,11 @@
 HCaption::HCaption(BRect rect,const char* name,BListView *target)
 			:BView(rect,name,B_FOLLOW_RIGHT|B_FOLLOW_BOTTOM,B_WILL_DRAW|B_PULSE_NEEDED)
 			,fTarget(target)
-			,fOld(-1)			
+			,fOld(-1)
 			,fTime(0)
 {
 	SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
-	
+
 	BRect rect1 = rect;
 	rect1.OffsetTo(B_ORIGIN);
 	//
@@ -73,7 +73,7 @@ HCaption::Pulse()
 /***********************************************************
  * Set number.
  ***********************************************************/
-void 
+void
 HCaption::SetCaption(int32 num,time_t time)
 {
 	BAutolock lock(Window());
@@ -83,14 +83,14 @@ HCaption::SetCaption(int32 num,time_t time)
 	if(time != 0)
 	{
 		struct tm* t = localtime(&time);
-	
+
 		char *tmp = new char[1024];
 		::sprintf(tmp,"%.2d:%.2d:%.2d",t->tm_hour,t->tm_min,t->tm_sec);
 		str << tmp;
 		delete[] tmp;
 	}else
 		str << "00:00:00";
-		
+
 	if(num == 1)
 		str << "   " << num << " " << _("user");
 	else

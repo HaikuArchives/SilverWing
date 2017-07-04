@@ -1,7 +1,7 @@
 #ifndef __HCATEGORYLIST_H__
 #define __HCATEGORYLIST_H__
 
-#include "ColumnListView.h"
+#include <santa/ColumnListView.h>
 
 
 class HCategoryItem;
@@ -28,4 +28,4 @@ virtual void	MessageReceived(BMessage *message);
 private:
 		BList	fPointerList;
 };
-#endif		 
+#endif

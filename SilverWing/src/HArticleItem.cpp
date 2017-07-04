@@ -1,3 +1,23 @@
+#define private public
+#include <santa/CLVEasyItem.h>
+#undef private
+enum
+{
+	CLVColNone =				0x00000000,
+	CLVColStaticText = 			0x00000001,
+	CLVColTruncateText =		0x00000002,
+	CLVColBitmap = 				0x00000003,
+	CLVColUserText = 			0x00000004,
+	CLVColTruncateUserText =	0x00000005,
+
+	CLVColTypesMask =			0x00000007,
+
+	CLVColFlagBitmapIsCopy =	0x00000008,
+	CLVColFlagNeedsTruncation =	0x00000010,
+	CLVColFlagRightJustify =	0x00000020
+};
+
+
 #include "HArticleItem.h"
 #include "ResourceUtils.h"
 #include "TextUtils.h"
@@ -22,10 +42,10 @@ HArticleItem::HArticleItem(const char* subject,const char* sender,
 	fTime = in_time;
 	BString str;
 	str << subject << "   ( by " << sender << " )";
-	
+
 	ResourceUtils utils;
 	BBitmap *bitmap = utils.GetBitmapResource('BBMP',"BMP:POST");
-	
+
 	this->SetColumnContent(1,bitmap);
 	delete bitmap;
 	char *text = new char[str.Length()+1];
@@ -60,7 +80,7 @@ HArticleItem::~HArticleItem()
 /***********************************************************
  * List items compare function.
  ***********************************************************/
-int 
+int
 HArticleItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item2, int32 KeyColumn)
 {
 	int result;
@@ -69,7 +89,7 @@ HArticleItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item
 	if(Item1 == NULL || Item2 == NULL || Item1->m_column_types.CountItems() <= KeyColumn ||
 		Item2->m_column_types.CountItems() <= KeyColumn)
 		return 0;
-	
+
 	int32 type1 = ((int32)Item1->m_column_types.ItemAt(KeyColumn)) & CLVColTypesMask;
 	int32 type2 = ((int32)Item2->m_column_types.ItemAt(KeyColumn)) & CLVColTypesMask;
 
@@ -90,7 +110,7 @@ HArticleItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item
 		text2 = (const char*)Item2->m_column_content.ItemAt(KeyColumn);
 	else if(type2 == CLVColTruncateUserText || type2 == CLVColUserText)
 		text2 = Item2->GetUserText(KeyColumn,-1);
-	
+
 	// date columns
 	if( KeyColumn == 4 )
 	{
@@ -104,12 +124,12 @@ HArticleItem::CompareItems(const CLVListItem *a_Item1, const CLVListItem *a_Item
 	}else{
 		result = strcasecmp(text1,text2);
 	}
-	
+
 	return result;
 }
 
 /***********************************************************
- * Draw item 
+ * Draw item
  ***********************************************************/
 void
 HArticleItem::DrawItemColumn(BView* owner, BRect item_column_rect, int32 column_index, bool complete)
@@ -117,14 +137,14 @@ HArticleItem::DrawItemColumn(BView* owner, BRect item_column_rect, int32 column_
 	CLVEasyItem::DrawItemColumn(owner,item_column_rect,column_index,complete);
 	// Stroke line
 	rgb_color old_col = owner->HighColor();
-	
+
 	owner->SetHighColor(kBorderColor);
-	
+
 	BPoint start,end;
 	start.y = end.y = item_column_rect.bottom;
 	start.x = 0;
 	end.x = owner->Bounds().right;
-	
+
 	owner->StrokeLine(start,end);
 	owner->SetHighColor(old_col);
-}	
+}

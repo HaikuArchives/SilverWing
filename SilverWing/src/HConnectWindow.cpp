@@ -16,7 +16,7 @@
 
 #include "NumberControl.h"
 #include "HConnectWindow.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 #include "HApp.h"
 
 /***********************************************************
@@ -52,7 +52,7 @@ HConnectWindow::InitGUI(bool edit)
 	rect.OffsetTo(B_ORIGIN);
 	BView *bg = new BView(rect,"bg",B_FOLLOW_ALL,B_WILL_DRAW);
 	bg->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
-	
+
 	BTextControl *control;
 	rect.top += 20;
 	rect.left += 20;
@@ -66,7 +66,7 @@ HConnectWindow::InitGUI(bool edit)
 		rect.OffsetBy(0,30);
 		bg->ResizeBy(0,30);
 		this->ResizeBy(0,30);
-	}	
+	}
 	const int divider = (int)bg->StringWidth(_("Password:")) +2;
 	control = new BTextControl(rect,"address",_("Address:"),"",NULL,B_FOLLOW_ALL);
 	control->SetDivider(divider);
@@ -115,19 +115,19 @@ HConnectWindow::InitBookmarks()
 	BMenuItem *item;
 	BMessage *msg;
 	// Bookmarksディレクトリを探す
- 	status_t 	err = B_NO_ERROR; 
-	app_info info; 
-    BPath pt; 
-    be_app->GetAppInfo(&info); 
-    BEntry entry(&info.ref); 
-    entry.GetPath(&pt); 
+ 	status_t 	err = B_NO_ERROR;
+	app_info info;
+    BPath pt;
+    be_app->GetAppInfo(&info);
+    BEntry entry(&info.ref);
+    entry.GetPath(&pt);
     pt.GetParent(&pt);
 	pt.Append("Bookmarks");
 	BDirectory dir( pt.Path() );
 
    	// Serverファイルを読み込む
 	while( err == B_NO_ERROR ){
-		err = dir.GetNextEntry( (BEntry*)&entry, true );			
+		err = dir.GetNextEntry( (BEntry*)&entry, true );
 		if( entry.InitCheck() != B_NO_ERROR ){
 			break;
 		}
@@ -146,7 +146,7 @@ HConnectWindow::InitBookmarks()
 			delete file;
 		}
 	}
-	
+
 	return menu;
 }
 
@@ -202,16 +202,16 @@ HConnectWindow::MessageReceived(BMessage *message)
 void
 HConnectWindow::SaveServer(const char* name
 							,const char* address
-							,const char* login 
+							,const char* login
 							,const char* password
 							,int16 port)
 {
-	// Bookmarksディレクトリを探す 
-	app_info info; 
-    BPath pt; 
-    be_app->GetAppInfo(&info); 
-    BEntry entry(&info.ref); 
-    entry.GetPath(&pt); 
+	// Bookmarksディレクトリを探す
+	app_info info;
+    BPath pt;
+    be_app->GetAppInfo(&info);
+    BEntry entry(&info.ref);
+    entry.GetPath(&pt);
     pt.GetParent(&pt);
 	pt.Append("Bookmarks");
 	pt.Append(name);
@@ -231,11 +231,11 @@ HConnectWindow::SaveServer(const char* name
 		ninfo.SetPreferredApp("application/x-vnd.takamatsu-silverwing");
 	}else{
 		pt.GetParent(&pt);
-		
+
 		create_directory(pt.Path(),0777);
 		this->SaveServer(name,address,login,password,port);
 	}
-	delete file;	
+	delete file;
 }
 
 /***********************************************************
@@ -245,11 +245,11 @@ void
 HConnectWindow::LoadServer(const char* name)
 {
 	// Serversディレクトリを探す
-	app_info ainfo; 
-    BPath pt; 
-    be_app->GetAppInfo(&ainfo); 
-    BEntry entry(&ainfo.ref); 
-    entry.GetPath(&pt); 
+	app_info ainfo;
+    BPath pt;
+    be_app->GetAppInfo(&ainfo);
+    BEntry entry(&ainfo.ref);
+    entry.GetPath(&pt);
     pt.GetParent(&pt);
 	pt.Append("Bookmarks");
 	pt.Append(name);
@@ -263,7 +263,7 @@ HConnectWindow::LoadServer(const char* name)
 		BMessage msg;
 		msg.Unflatten(file);
 		host = msg.FindString("address");
-		login = msg.FindString("login");	
+		login = msg.FindString("login");
 		pass = msg.FindString("password");
 		iport = msg.FindInt16("port");
 		int32 d = iport;
