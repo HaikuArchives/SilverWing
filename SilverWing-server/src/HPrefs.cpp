@@ -1,6 +1,6 @@
 #include <Autolock.h>
 #include "HPrefs.h"
-#include "Colors.h"
+#include <santa/Colors.h>
 
 
 HPrefs::HPrefs(const char* name, const char* dir_name)
@@ -30,7 +30,7 @@ HPrefs::MakeDefault()
 	fDefaultMessage->AddInt32("sim_upload",10);
 	fDefaultMessage->AddInt32("encoding",-1);
 	fDefaultMessage->AddBool("sound",true);
-	
-	
+
+
 	_inherited::MakeDefault();
 }

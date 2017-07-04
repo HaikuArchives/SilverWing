@@ -2,6 +2,8 @@
 #define __HSERVER_SETTING_H__
 
 #include <View.h>
+#include <CheckBox.h>
+#include <TextControl.h>
 
 class NumberControl;
 
@@ -22,7 +24,7 @@ protected:
 	NumberControl*	fPort;
 	NumberControl*	fMaxUser;
 	NumberControl*	fSimDownloads;
-	NumberControl*	fSimUploads;	
+	NumberControl*	fSimUploads;
 	BCheckBox*		fSaveLog;
 	BCheckBox*		fThreadedNews;
 	BCheckBox*		fSound;

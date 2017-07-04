@@ -2,6 +2,7 @@
 #define __HTRACKER_SETTING_H__
 
 #include <View.h>
+#include <TextControl.h>
 
 enum{
 	M_DEL_MSG = 'MDEL',
@@ -27,6 +28,6 @@ protected:
 	BTextControl *fAddress;
 	BTextControl *fLogin;
 	BTextControl *fPassword;
-	
+
 };
 #endif
